@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="initial-scale=1" />
+
+    <style type="text/css">
+    body {
+        background-color:#1D1D1D;
+    }
+    canvas {
+        border: 0px solid #000;
+        background-color: #000;
+    }
+    h1 {
+        font-size: 20px;
+        color: lightgreen;
+    }
+    p, ul, li, a {
+        font-size: 14px;
+        color: lightgray;
+    }
+    </style>
+</head>
+<body>
+    <h1>Zombie Infection Simulation</h1>
+
+    <canvas id="game-canvas"></canvas>
+
+    <div>
+
+    <p>Simulation Rules</p>
+
+    <p>Zombies are green, move slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.</p>
+
+    <p>If a zombie finds a survivor standing directly in front of it, it bites and infects them; the survivor immediately joins the ranks of the undead.</p>
+
+    <p>Survivors are pink and run, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.</p>
+
+    <p>Panicked survivors are bright pink. If a survivor sees another panicked survivor, it starts panicking as well. A panicked survivor who has seen nothing to panic about for a while will calm down again.</p>
+
+
+    <p>Controls</p>
+
+    <ul>
+    <li><strong>Press Space, or click/tap inside the city to pause/unpause</strong></li>
+    <li>Press s to alter the simulation speed</li>
+    <li>Press r to uninfect all but one zombie (resets the city)</li>
+    <li>Press + and - to adjust population (also resets the city)</li>
+    <li>Press f to toggle complete panic</li>
+    </ul>
+
+    <p>
+        Based on <a href="https://kevan.org/proce55ing/zombies/" target="_blank">Zombie Infection Simulation - Java version by Kevan Davis </a>
+    </p>
+
+    </div>
+
+    <script src="js/game_v1.js"></script>
+
+    <script>
+    let game;
+
+    window.addEventListener('load', (event) => {
+        game = new Game('game-canvas', 120, 120, 500);
+    });
+    </script>
+
+</body>
+</html>
