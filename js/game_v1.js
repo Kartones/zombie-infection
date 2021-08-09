@@ -393,10 +393,15 @@ class Game {
         }
     }
 
+    _restartWorld() {
+        this.world.entities.forEach(entity => entity.cureInfection());
+        this.world.entities[0].infect();
+    }
+
     _keydown(event) {
         switch(event.code) {
             case 'Space':
-                this._pauseOrUnpause().bind(this);
+                this._pauseOrUnpause();
                 break;
             case 'KeyF':
                 // full panic mode (by lowering the threshold)
@@ -406,16 +411,16 @@ class Game {
                 this.speed = (this.speed + 1) % 3;
                 break;
             case 'KeyR':
-                // Restart
-                this.world.entities.forEach(entity => entity.cureInfection());
-                this.world.entities[0].infect();
+                this._restartWorld();
                 break;
             case 'Minus':
                 this._removeEntities();
+                this._restartWorld();
                 break;
             case 'Equal':
             case 'Plus':
                 this._addEntities();
+                this._restartWorld();
                 break;
         }
     }
