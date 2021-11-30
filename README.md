@@ -1,6 +1,7 @@
 # Zombie Infection Simulation
 
-## Intro
+
+## Introduction
 
 A simple yet entertaining zombie simulator. A single infected/zombie appears at a randomly generated city, just watch how it bites and transforms other humans into more zombies.
 
