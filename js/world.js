@@ -116,10 +116,6 @@ class World {
     }
   }
 
-  getCell(x, y) {
-    return this.worldState[y][x];
-  }
-
   getEntityType(x, y) {
     return this.worldState[y][x];
   }
