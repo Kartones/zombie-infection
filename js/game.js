@@ -1,0 +1,119 @@
+"use strict";
+
+class Game {
+  constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
+    this.world = new World(
+      canvasNodeId,
+      mapWidth,
+      mapHeight,
+      GAME_CONSTANTS.PANIC_LEVEL,
+      numEntities
+    );
+
+    this.paused = true;
+    this.speed = 1;
+    this.updateId = undefined;
+
+    document.addEventListener("keydown", this._keydown.bind(this));
+
+    document
+      .getElementById("game-canvas")
+      .addEventListener("click", this._pauseOrUnpause.bind(this));
+  }
+
+  _update() {
+    if (this.paused) {
+      return;
+    }
+
+    this.world.entities.forEach((entity) => entity.move());
+    this.updateId = setTimeout(
+      this._update.bind(this),
+      GAME_CONSTANTS.UPDATE_INTERVAL_MS * this.speed
+    );
+  }
+
+  _addEntities() {
+    for (
+      let count = 0, maximumReached = false;
+      count < GAME_CONSTANTS.ENTITIES_PER_BATCH && !maximumReached;
+      count++
+    ) {
+      if (this.world.entities.length === GAME_CONSTANTS.MAX_ENTITIES) {
+        maximumReached = true;
+      } else {
+        let newEntity = new Entity(this.world);
+        this.world.entities.push(newEntity);
+        newEntity.setPosition();
+      }
+    }
+
+    this.world._convertToPolicemen();
+  }
+
+  _removeEntities() {
+    for (
+      let count = 0, minimumReached = false;
+      count < GAME_CONSTANTS.ENTITIES_PER_BATCH && !minimumReached;
+      count++
+    ) {
+      if (this.world.entities.length === GAME_CONSTANTS.MIN_ENTITIES) {
+        minimumReached = true;
+      } else {
+        let removedEntity = this.world.entities.pop();
+        this.world.setCell(removedEntity.x, removedEntity.y, ENTITY_TYPES.NONE);
+      }
+    }
+  }
+
+  _pauseOrUnpause() {
+    this.paused = !this.paused;
+    if (this.paused) {
+      clearTimeout(this.updateId);
+    } else {
+      this.updateId = setTimeout(
+        this._update.bind(this),
+        GAME_CONSTANTS.UPDATE_INTERVAL_MS * this.speed
+      );
+    }
+  }
+
+  _restartWorld() {
+    this.world.entities.forEach((entity) => entity.cureInfection());
+    // "patient zero" will be the first entity
+    this.world.entities[0].infect();
+  }
+
+  _keydown(event) {
+    switch (event.code) {
+      case "Space":
+        this._pauseOrUnpause();
+        break;
+      case "KeyF":
+        this.world.panicThreshold =
+          this.world.panicThreshold === GAME_CONSTANTS.PANIC_LEVEL
+            ? 0
+            : GAME_CONSTANTS.PANIC_LEVEL;
+        break;
+      case "KeyS":
+        this.speed = (this.speed + 1) % 3;
+        break;
+      case "KeyR":
+        this._restartWorld();
+        break;
+      case "Minus":
+        this._removeEntities();
+        this._restartWorld();
+        break;
+      case "Equal":
+      case "Plus":
+        this._addEntities();
+        this._restartWorld();
+        break;
+    }
+  }
+}
+
+Game.prototype.PANIC_LEVEL = GAME_CONSTANTS.PANIC_LEVEL;
+Game.prototype.MIN_ENTITIES = GAME_CONSTANTS.MIN_ENTITIES;
+Game.prototype.MAX_ENTITIES = GAME_CONSTANTS.MAX_ENTITIES;
