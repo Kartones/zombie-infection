@@ -54,7 +54,10 @@ const COLOR_TO_ENTITY_TYPE = {
 
 // Entity behavior constants
 const ENTITY_CONSTANTS = {
-  VIEW_DISTANCE: 5,
+  // This one takes into account all visible entities, not just the first one
+  SHOT_VIEW_DISTANCE: 5,
+  NEAR_LOOK_DISTANCE: 1,
+  FAR_LOOK_DISTANCE: 10,
   SHOOT_PISTOL_DISTANCE: 2,
 };
 
@@ -77,4 +80,8 @@ const GAME_CONSTANTS = {
   // Of total population, maximum percentage that can be policemen
   MAX_POLICEMEN_PERCENTAGE: 0.05,
   POLICEMAN_SHOT_ACCURACY: 0.7,
+  UPDATE_INTERVAL_MS: 50,
+  MOVEMENT_RANDOM_FACTOR: 10,
+  // It'll move if random number [0, MOVEMENT_RANDOM_FACTOR) is less than this
+  ZOMBIE_MOVE_CHANCE: 2,
 };

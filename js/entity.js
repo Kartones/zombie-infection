@@ -11,7 +11,7 @@ class Entity {
     this.activityLevel = 0;
   }
 
-  position() {
+  setPosition() {
     for (let attemptOk = 0; attemptOk < 100; attemptOk++) {
       this.x = Math.floor(Math.random() * this.world.width);
       this.y = Math.floor(Math.random() * this.world.height);
@@ -39,16 +39,19 @@ class Entity {
     this.activityLevel = 0;
 
     this.world.setCell(this.x, this.y, ENTITY_TYPES.NONE);
-    this.position();
+    this.setPosition();
   }
 
   move() {
-    let rand = Math.floor(Math.random() * 10);
+    let rand = Math.floor(
+      Math.random() * GAME_CONSTANTS.MOVEMENT_RANDOM_FACTOR
+    );
 
     if (
       (this.type === ENTITY_TYPES.HUMAN &&
         (this.activityLevel > 0 || rand > this.world.panicThreshold)) ||
-      (this.type === ENTITY_TYPES.ZOMBIE && rand === 1) ||
+      (this.type === ENTITY_TYPES.ZOMBIE &&
+        rand === GAME_CONSTANTS.ZOMBIE_MOVE_CHANCE) ||
       (this.type === ENTITY_TYPES.POLICEMAN &&
         (this.activityLevel > 0 || rand > this.world.panicThreshold))
     ) {
@@ -129,7 +132,7 @@ class Entity {
         this.x,
         this.y,
         this.direction,
-        ENTITY_CONSTANTS.VIEW_DISTANCE
+        ENTITY_CONSTANTS.SHOT_VIEW_DISTANCE
       );
 
       if (zombieCount === 1) {

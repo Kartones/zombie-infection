@@ -27,7 +27,10 @@ class Game {
     }
 
     this.world.entities.forEach((entity) => entity.move());
-    this.updateId = setTimeout(this._update.bind(this), 50 * this.speed);
+    this.updateId = setTimeout(
+      this._update.bind(this),
+      GAME_CONSTANTS.UPDATE_INTERVAL_MS * this.speed
+    );
   }
 
   _addEntities() {
@@ -41,7 +44,7 @@ class Game {
       } else {
         let newEntity = new Entity(this.world);
         this.world.entities.push(newEntity);
-        newEntity.position();
+        newEntity.setPosition();
       }
     }
 
@@ -68,7 +71,10 @@ class Game {
     if (this.paused) {
       clearTimeout(this.updateId);
     } else {
-      this.updateId = setTimeout(this._update.bind(this), 50 * this.speed);
+      this.updateId = setTimeout(
+        this._update.bind(this),
+        GAME_CONSTANTS.UPDATE_INTERVAL_MS * this.speed
+      );
     }
   }
 

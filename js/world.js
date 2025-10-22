@@ -73,7 +73,7 @@ class World {
     this.entities = new Array(amountEntities)
       .fill()
       .map(() => new Entity(this));
-    this.entities.forEach((entity) => entity.position());
+    this.entities.forEach((entity) => entity.setPosition());
     this._convertToPolicemen();
     this.entities[0].infect();
   }
@@ -139,11 +139,11 @@ class World {
   }
 
   nearLook(x, y, direction) {
-    return this._look(x, y, direction, 1);
+    return this._look(x, y, direction, ENTITY_CONSTANTS.NEAR_LOOK_DISTANCE);
   }
 
   farLook(x, y, direction) {
-    return this._look(x, y, direction, 10);
+    return this._look(x, y, direction, ENTITY_CONSTANTS.FAR_LOOK_DISTANCE);
   }
 
   humansAt(x, y) {
