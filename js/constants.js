@@ -7,6 +7,7 @@ const ENTITY_TYPES = {
   HUMAN: 2,
   HUMAN_PANIC: 3,
   WALL: 4,
+  POLICEMAN: 5,
 };
 
 // World constants
@@ -28,6 +29,7 @@ const COLORS = {
   HUMAN_PANIC: [196, 43, 196],
   ZOMBIE: [30, 170, 30],
   WALL: [90, 90, 90],
+  POLICEMAN: [0, 100, 200],
 };
 
 // Map entity types to colors for rendering
@@ -37,6 +39,7 @@ const ENTITY_TYPE_TO_COLOR = {
   [ENTITY_TYPES.HUMAN]: COLORS.HUMAN,
   [ENTITY_TYPES.HUMAN_PANIC]: COLORS.HUMAN_PANIC,
   [ENTITY_TYPES.WALL]: COLORS.WALL,
+  [ENTITY_TYPES.POLICEMAN]: COLORS.POLICEMAN,
 };
 
 // Map colors to entity types for detection
@@ -46,15 +49,13 @@ const COLOR_TO_ENTITY_TYPE = {
   "196,43,196": ENTITY_TYPES.HUMAN_PANIC,
   "30,170,30": ENTITY_TYPES.ZOMBIE,
   "90,90,90": ENTITY_TYPES.WALL,
+  "0,100,200": ENTITY_TYPES.POLICEMAN,
 };
 
-// Target types for detection
-const TARGETS = {
-  NOTHING: 0,
-  ZOMBIE: 1,
-  HUMAN: 2,
-  WALL: 3,
-  HUMAN_PANIC: 4,
+// Entity behavior constants
+const ENTITY_CONSTANTS = {
+  VIEW_DISTANCE: 5,
+  SHOOT_PISTOL_DISTANCE: 2,
 };
 
 // Directions
@@ -70,4 +71,10 @@ const GAME_CONSTANTS = {
   PANIC_LEVEL: 5,
   MIN_ENTITIES: 100,
   MAX_ENTITIES: 4000,
+  // When changing population, how many entities to add/remove per batch
+  ENTITIES_PER_BATCH: 100,
+  MIN_POLICEMEN: 2,
+  // Of total population, maximum percentage that can be policemen
+  MAX_POLICEMEN_PERCENTAGE: 0.05,
+  POLICEMAN_SHOT_ACCURACY: 0.7,
 };

@@ -30,6 +30,7 @@ class World {
       COLORS.HUMAN,
       COLORS.HUMAN_PANIC,
       COLORS.ZOMBIE,
+      COLORS.POLICEMAN,
     ]) {
       let colorComponents = new Array();
       for (
@@ -73,6 +74,7 @@ class World {
       .fill()
       .map(() => new Entity(this));
     this.entities.forEach((entity) => entity.position());
+    this._convertToPolicemen();
     this.entities[0].infect();
   }
 
@@ -82,6 +84,34 @@ class World {
       this.worldState[y] = new Array(this.width);
       for (let x = 0; x < this.width; x++) {
         this.worldState[y][x] = ENTITY_TYPES.NONE;
+      }
+    }
+  }
+
+  _convertToPolicemen() {
+    const maxPolicemen = Math.max(
+      GAME_CONSTANTS.MIN_POLICEMEN,
+      Math.floor(this.entities.length * GAME_CONSTANTS.MAX_POLICEMEN_PERCENTAGE)
+    );
+
+    const policemen = this.entities.filter(
+      (entity) => entity.type === ENTITY_TYPES.POLICEMAN
+    );
+
+    // If we have fewer policemen than max, convert some humans to policemen
+    if (policemen.length < maxPolicemen) {
+      const neededPolicemen = maxPolicemen - policemen.length;
+      const availableHumans = this.entities.filter(
+        (entity) => entity.type === ENTITY_TYPES.HUMAN
+      );
+
+      for (
+        let count = 0;
+        count < neededPolicemen && count < availableHumans.length;
+        count++
+      ) {
+        availableHumans[count].type = ENTITY_TYPES.POLICEMAN;
+        availableHumans[count]._draw();
       }
     }
   }
@@ -121,6 +151,56 @@ class World {
       .filter((entity) => entity.x === x && entity.y === y)
       .filter((entity) => entity.type === ENTITY_TYPES.HUMAN);
     return matches.length > 0 ? matches : undefined;
+  }
+
+  zombiesInDirection(x, y, direction, distance) {
+    let zombieCount = 0;
+    let checkX = x;
+    let checkY = y;
+
+    for (let index = 0; index < distance; index++) {
+      switch (direction) {
+        case DIRECTIONS.NORTH:
+          checkY--;
+          break;
+        case DIRECTIONS.EAST:
+          checkX++;
+          break;
+        case DIRECTIONS.SOUTH:
+          checkY++;
+          break;
+        case DIRECTIONS.WEST:
+          checkX--;
+          break;
+      }
+
+      if (
+        checkX > this.width - 1 ||
+        checkX < 1 ||
+        checkY > this.height - 1 ||
+        checkY < 1
+      ) {
+        break;
+      }
+
+      const entityType = this.getEntityType(checkX, checkY);
+      if (entityType === ENTITY_TYPES.ZOMBIE) {
+        zombieCount++;
+      }
+    }
+
+    return zombieCount;
+  }
+
+  removeZombieAt(x, y) {
+    const zombieAtPos = this.entities.find(
+      (entity) =>
+        entity.x === x && entity.y === y && entity.type === ENTITY_TYPES.ZOMBIE
+    );
+    if (zombieAtPos) {
+      this.setCell(zombieAtPos.x, zombieAtPos.y, ENTITY_TYPES.NONE);
+      this.entities = this.entities.filter((entity) => entity !== zombieAtPos);
+    }
   }
 
   _addWalls() {
@@ -210,22 +290,22 @@ class World {
       }
 
       if (x > this.width - 1 || x < 1 || y > this.height - 1 || y < 1) {
-        return TARGETS.WALL;
+        return ENTITY_TYPES.WALL;
       } else {
         const entityType = this.getEntityType(x, y);
         if (entityType === ENTITY_TYPES.WALL) {
-          return TARGETS.WALL;
+          return ENTITY_TYPES.WALL;
         } else if (entityType === ENTITY_TYPES.HUMAN_PANIC) {
-          return TARGETS.HUMAN_PANIC;
+          return ENTITY_TYPES.HUMAN_PANIC;
         } else if (entityType === ENTITY_TYPES.HUMAN) {
-          return TARGETS.HUMAN;
+          return ENTITY_TYPES.HUMAN;
         } else if (entityType === ENTITY_TYPES.ZOMBIE) {
-          return TARGETS.ZOMBIE;
+          return ENTITY_TYPES.ZOMBIE;
         }
       }
     }
 
-    return TARGETS.NOTHING;
+    return ENTITY_TYPES.NONE;
   }
 }
 
@@ -233,5 +313,4 @@ World.prototype.SCALE_FACTOR = WORLD_CONSTANTS.SCALE_FACTOR;
 World.prototype.ACTIVE_AMOUNT = WORLD_CONSTANTS.ACTIVE_AMOUNT;
 
 World.prototype.COLOR = COLORS;
-World.prototype.TARGETS = TARGETS;
 World.prototype.DIRECTIONS = DIRECTIONS;

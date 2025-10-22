@@ -14,18 +14,16 @@ Migrated from Java to Javascript (with some tweaks) from ["Zombie Infection Simu
 
 ## Instructions
 
-Just press spacebar, or click or tap on the city image/canvas to pause/unpause. Other commands (keyboard shortcuts) are 
+<p>Simulation Rules:</p>
+<ul>
+<li>Zombies are green, move slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.</li>
+<li>If a zombie finds a survivor standing directly in front of it, it bites and infects them; the survivor immediately joins the ranks of the undead.</li>
+<li>Survivors are pink and walk, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.</li>
+<li>Panicked survivors are magenta and run. If a survivor sees another panicked survivor, it starts panicking as well. A panicked survivor who has seen nothing to panic about for a while will calm down again.</li>
+</ul>
 
-### Simulation Rules
 
-Zombies are green, move slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.
-
-If a zombie finds a survivor standing directly in front of it, it bites and infects them; the survivor immediately joins the ranks of the undead.
-
-Survivors are pink and run, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.
-
-Panicked survivors are bright pink. If a survivor sees another panicked survivor, it starts panicking as well. A panicked survivor who has seen nothing to panic about for a while will calm down again.
-
+Controls are detailed at the [index.html] file.
 
 ## License
 

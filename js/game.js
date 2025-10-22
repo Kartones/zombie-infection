@@ -33,7 +33,7 @@ class Game {
   _addEntities() {
     for (
       let count = 0, maximumReached = false;
-      count < 100 && !maximumReached;
+      count < GAME_CONSTANTS.ENTITIES_PER_BATCH && !maximumReached;
       count++
     ) {
       if (this.world.entities.length === GAME_CONSTANTS.MAX_ENTITIES) {
@@ -44,12 +44,14 @@ class Game {
         newEntity.position();
       }
     }
+
+    this.world._convertToPolicemen();
   }
 
   _removeEntities() {
     for (
       let count = 0, minimumReached = false;
-      count < 100 && !minimumReached;
+      count < GAME_CONSTANTS.ENTITIES_PER_BATCH && !minimumReached;
       count++
     ) {
       if (this.world.entities.length === GAME_CONSTANTS.MIN_ENTITIES) {
@@ -72,6 +74,7 @@ class Game {
 
   _restartWorld() {
     this.world.entities.forEach((entity) => entity.cureInfection());
+    // "patient zero" will be the first entity
     this.world.entities[0].infect();
   }
 

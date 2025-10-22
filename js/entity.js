@@ -48,10 +48,13 @@ class Entity {
     if (
       (this.type === ENTITY_TYPES.HUMAN &&
         (this.activityLevel > 0 || rand > this.world.panicThreshold)) ||
-      (this.type === ENTITY_TYPES.ZOMBIE && rand === 1)
+      (this.type === ENTITY_TYPES.ZOMBIE && rand === 1) ||
+      (this.type === ENTITY_TYPES.POLICEMAN &&
+        (this.activityLevel > 0 || rand > this.world.panicThreshold))
     ) {
       if (
-        this.world.nearLook(this.x, this.y, this.direction) === TARGETS.NOTHING
+        this.world.nearLook(this.x, this.y, this.direction) ===
+        ENTITY_TYPES.NONE
       ) {
         this.world.setCell(this.x, this.y, ENTITY_TYPES.NONE);
         switch (this.direction) {
@@ -82,16 +85,22 @@ class Entity {
     let target = this.world.farLook(this.x, this.y, this.direction);
 
     if (this.type === ENTITY_TYPES.ZOMBIE) {
-      if (target === TARGETS.HUMAN || target === TARGETS.HUMAN_PANIC) {
+      if (
+        target === ENTITY_TYPES.HUMAN ||
+        target === ENTITY_TYPES.HUMAN_PANIC
+      ) {
         this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
       }
 
-      if (this.activityLevel === 0 && target !== TARGETS.ZOMBIE) {
+      if (this.activityLevel === 0 && target !== ENTITY_TYPES.ZOMBIE) {
         this.direction = this._randomDirection();
       }
 
       let victim = this.world.nearLook(this.x, this.y, this.direction);
-      if (victim === TARGETS.HUMAN || victim === TARGETS.HUMAN_PANIC) {
+      if (
+        victim === ENTITY_TYPES.HUMAN ||
+        victim === ENTITY_TYPES.HUMAN_PANIC
+      ) {
         let dx = this.x,
           dy = this.y;
 
@@ -115,12 +124,41 @@ class Entity {
           this.bite(humansAtPosition);
         }
       }
+    } else if (this.type === ENTITY_TYPES.POLICEMAN) {
+      let zombieCount = this.world.zombiesInDirection(
+        this.x,
+        this.y,
+        this.direction,
+        ENTITY_CONSTANTS.VIEW_DISTANCE
+      );
+
+      if (zombieCount === 1) {
+        // Exactly one zombie: attempt to shoot
+        if (Math.random() < GAME_CONSTANTS.POLICEMAN_SHOT_ACCURACY) {
+          this._shootZombie(this.type);
+        }
+        this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
+      } else if (zombieCount > 1) {
+        // Multiple zombies: flee (flip direction)
+        this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
+        this.direction += 2;
+        if (this.direction > 4) {
+          this.direction -= 4;
+        }
+      }
+
+      if (Math.floor(Math.random() * 8) === 1) {
+        this.direction = this._randomDirection();
+      }
     } else {
-      if (target === TARGETS.ZOMBIE || target === TARGETS.HUMAN_PANIC) {
+      if (
+        target === ENTITY_TYPES.ZOMBIE ||
+        target === ENTITY_TYPES.HUMAN_PANIC
+      ) {
         this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
       }
 
-      if (target === TARGETS.ZOMBIE) {
+      if (target === ENTITY_TYPES.ZOMBIE) {
         this.direction += 2;
         if (this.direction > 4) {
           this.direction -= 4;
@@ -140,13 +178,59 @@ class Entity {
   _draw() {
     if (this.type === ENTITY_TYPES.ZOMBIE) {
       this.world.setCell(this.x, this.y, ENTITY_TYPES.ZOMBIE);
+    } else if (this.type === ENTITY_TYPES.POLICEMAN) {
+      this.world.setCell(this.x, this.y, ENTITY_TYPES.POLICEMAN);
     } else if (this.activityLevel > 0) {
       this.world.setCell(this.x, this.y, ENTITY_TYPES.HUMAN_PANIC);
     } else {
       this.world.setCell(this.x, this.y, ENTITY_TYPES.HUMAN);
     }
   }
+
+  _shootZombie(entityType) {
+    let shootDistance = 0;
+    if (entityType === ENTITY_TYPES.POLICEMAN) {
+      shootDistance = ENTITY_CONSTANTS.SHOOT_PISTOL_DISTANCE;
+    }
+
+    // Shoot in the current direction, find and remove the first zombie
+    let shootX = this.x;
+    let shootY = this.y;
+
+    for (let distance = 0; distance < shootDistance; distance++) {
+      switch (this.direction) {
+        case DIRECTIONS.NORTH:
+          shootY--;
+          break;
+        case DIRECTIONS.EAST:
+          shootX++;
+          break;
+        case DIRECTIONS.SOUTH:
+          shootY++;
+          break;
+        case DIRECTIONS.WEST:
+          shootX--;
+          break;
+      }
+
+      if (
+        shootX > this.world.width - 1 ||
+        shootX < 1 ||
+        shootY > this.world.height - 1 ||
+        shootY < 1
+      ) {
+        break;
+      }
+
+      const entityType = this.world.getEntityType(shootX, shootY);
+      if (entityType === ENTITY_TYPES.ZOMBIE) {
+        this.world.removeZombieAt(shootX, shootY);
+        break;
+      }
+    }
+  }
 }
 
 Entity.prototype.TYPE_ZOMBIE = ENTITY_TYPES.ZOMBIE;
 Entity.prototype.TYPE_HUMAN = ENTITY_TYPES.HUMAN;
+Entity.prototype.TYPE_POLICEMAN = ENTITY_TYPES.POLICEMAN;

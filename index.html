@@ -14,13 +14,33 @@ canvas {
     background-color: #000;
 }
 h1 {
-    font-size: 20px;
+    font-size: 22px;
     color: lightgreen;
 }
 p, ul, li, a {
-    font-size: 14px;
+    font-size: 16px;
     color: lightgray;
 }
+.entity-zombie {
+    color: rgb(30, 170, 30);
+    font-weight: bold;
+}
+.entity-human {
+    color: rgb(213, 175, 213);
+    font-weight: bold;
+}
+.entity-human-panic {
+    color: rgb(196, 43, 196);
+    font-weight: bold;
+}
+.entity-policeman {
+    color: rgb(0, 100, 200);
+    font-weight: bold;
+}
+.footer, .footer a {
+    font-size: 14px;
+}
+
 </style>
 </head>
 <body>
@@ -32,11 +52,13 @@ p, ul, li, a {
 
 <p>Simulation Rules:</p>
 <ul>
-<li>Zombies are green, move slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.</li>
-<li>If a zombie finds a survivor standing directly in front of it, it bites and infects them; the survivor immediately joins the ranks of the undead.</li>
-<li>Survivors are pink and walk, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.</li>
-<li>Panicked survivors are magenta and run. If a survivor sees another panicked survivor, it starts panicking as well. A panicked survivor who has seen nothing to panic about for a while will calm down again.</li>
+<li><i class="entity-zombie">Zombies</i> are green, move slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.<br/>If a zombie finds a survivor standing directly in front of it, it bites and infects them; the survivor immediately joins the ranks of the undead.</li>
+<li><i class="entity-human">Survivors</i> are pink and walk, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.</li>
+<li><i class="entity-human-panic">Panicked survivors</i> are magenta and run. If a survivor sees another panicked survivor, it starts panicking as well. A panicked survivor who has seen nothing to panic about for a while will calm down again.</li>
+<li>Policemen are <i class="entity-policeman">blue</i>. They behave as humans, but if they see a single zombie, they will shoot it. If they see multiple zombies, they will panic and flee, as normal humans. Note that a shoot might miss.</li>
 </ul>
+
+
 <p>Controls</p>
 
 <ul>
@@ -47,10 +69,9 @@ p, ul, li, a {
 <li>Press f to toggle complete panic</li>
 </ul>
 
-<p>
-    Based on <a href="https://kevan.org/proce55ing/zombies/" target="_blank">Zombie Infection Simulation - Java version by Kevan Davis</a>
-</p>
-<p>
+<p class="footer">
+    Based on <a href="https://kevan.org/proce55ing/zombies/" target="_blank">Zombie Infection Simulation - Java version by Kevan Davis</a>.
+    <br/>
     Source code @ <a href="https://github.com/Kartones/zombie-infection" target="_blank">Github</a>
 </p>
 
