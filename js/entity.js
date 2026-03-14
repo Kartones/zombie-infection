@@ -13,8 +13,8 @@ class Entity {
 
   setPosition() {
     for (let attemptOk = 0; attemptOk < 100; attemptOk++) {
-      this.x = Math.floor(Math.random() * this.world.width);
-      this.y = Math.floor(Math.random() * this.world.height);
+      this.x = Math.floor(random() * this.world.width);
+      this.y = Math.floor(random() * this.world.height);
 
       if (this.world.getEntityType(this.x, this.y) === ENTITY_TYPES.NONE) {
         attemptOk = 100;
@@ -29,13 +29,16 @@ class Entity {
   }
 
   bite(humans) {
+    if (this.type !== ENTITY_TYPES.ZOMBIE) {
+      return;
+    }
     for (let human of humans) {
       human.infect();
     }
     soundSystem.playBite();
   }
 
-  cureInfection() {
+  cureInfectionAndReposition() {
     this.type = ENTITY_TYPES.HUMAN;
     this.activityLevel = 0;
 
@@ -44,7 +47,7 @@ class Entity {
   }
 
   move() {
-    const rand = Math.floor(Math.random() * GAME_CONSTANTS.MOVEMENT_RANDOM_FACTOR);
+    const rand = Math.floor(random() * GAME_CONSTANTS.MOVEMENT_RANDOM_FACTOR);
 
     if (this._shouldMove(rand)) {
       this._executeMove();
@@ -143,7 +146,7 @@ class Entity {
     );
 
     if (zombieCount === 1) {
-      if (Math.random() < GAME_CONSTANTS.POLICEMAN_SHOT_ACCURACY) {
+      if (random() < Config.POLICEMAN_SHOT_ACCURACY) {
         this._shootZombie(this.type);
       }
       this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
@@ -155,7 +158,7 @@ class Entity {
       }
     }
 
-    if (Math.floor(Math.random() * 8) === 1) {
+    if (Math.floor(random() * 8) === 1) {
       this.direction = this._randomDirection();
     }
   }
@@ -177,13 +180,13 @@ class Entity {
       }
     }
 
-    if (Math.floor(Math.random() * 8) === 1) {
+    if (Math.floor(random() * 8) === 1) {
       this.direction = this._randomDirection();
     }
   }
 
   _randomDirection() {
-    return Math.floor(Math.random() * 4) + 1;
+    return Math.floor(random() * 4) + 1;
   }
 
   _draw() {

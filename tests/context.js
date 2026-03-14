@@ -9,6 +9,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // properties of the context object. We append explicit this['X'] = X assignments
 // so tests can access them via ctx.X.
 const FILE_EXPORTS = {
+  'config.js': ['Config'],
+  'random.js': ['random'],
   'constants.js': [
     'ENTITY_TYPES', 'WORLD_CONSTANTS', 'ENTITY_CONSTANTS', 'DIRECTIONS', 'GAME_CONSTANTS',
   ],
@@ -24,9 +26,9 @@ function loadFile(ctx, filename) {
 }
 
 export function createContext() {
-  // Inject the host Math so that mock.method(Math, 'random', ...) in tests
-  // reaches the same object used by entity code running inside the VM.
   const ctx = vm.createContext({ Math, soundSystem: { playBite() {}, playShot() {} } });
+  loadFile(ctx, 'config.js');
+  loadFile(ctx, 'random.js');
   loadFile(ctx, 'constants.js');
   loadFile(ctx, 'entity.js');
   loadFile(ctx, 'world.js');

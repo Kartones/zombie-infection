@@ -76,6 +76,7 @@ describe('Entity.bite()', () => {
   it('infects each human in the list', () => {
     const world = makeMockWorld();
     const biter = makeEntity(world);
+    biter.type = ctx.ENTITY_TYPES.ZOMBIE;
 
     const victim1 = makeEntity(world);
     victim1.type = ctx.ENTITY_TYPES.HUMAN;
@@ -99,15 +100,15 @@ describe('Entity.bite()', () => {
   });
 });
 
-// --- Entity.cureInfection() ---
+// --- Entity.cureInfectionAndReposition() ---
 
-describe('Entity.cureInfection()', () => {
+describe('Entity.cureInfectionAndReposition()', () => {
   it('sets type to HUMAN', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
 
-    entity.cureInfection();
+    entity.cureInfectionAndReposition();
 
     assert.equal(entity.type, ctx.ENTITY_TYPES.HUMAN);
   });
@@ -118,7 +119,7 @@ describe('Entity.cureInfection()', () => {
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
     entity.activityLevel = 5;
 
-    entity.cureInfection();
+    entity.cureInfectionAndReposition();
 
     assert.equal(entity.activityLevel, 0);
   });
@@ -131,7 +132,7 @@ describe('Entity.cureInfection()', () => {
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
     world.worldState[4][2] = ctx.ENTITY_TYPES.ZOMBIE;
 
-    entity.cureInfection();
+    entity.cureInfectionAndReposition();
 
     const clearCall = world.setCellCalls.find(
       c => c.x === 2 && c.y === 4 && c.type === ctx.ENTITY_TYPES.NONE
@@ -148,10 +149,10 @@ describe('Entity.cureInfection()', () => {
 
     const mockRandom = mock.method(Math, 'random', () => 0.1);
     try {
-      entity.cureInfection();
+      entity.cureInfectionAndReposition();
       assert.ok(
         entity.x !== 2 || entity.y !== 4,
-        'entity position should change after cureInfection'
+        'entity position should change after cureInfectionAndReposition'
       );
     } finally {
       mockRandom.mock.restore();

@@ -32,8 +32,8 @@ class World {
 
   _convertToPolicemen() {
     const maxPolicemen = Math.max(
-      GAME_CONSTANTS.MIN_POLICEMEN,
-      Math.floor(this.entities.length * GAME_CONSTANTS.MAX_POLICEMEN_PERCENTAGE)
+      Config.MIN_POLICEMEN,
+      Math.floor(this.entities.length * Config.MAX_POLICEMEN_PERCENTAGE)
     );
 
     const policemen = this.entities.filter(
@@ -131,34 +131,37 @@ class World {
   }
 
   _addWalls() {
+    // Fill entire map with walls
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         this.worldState[y][x] = ENTITY_TYPES.WALL;
       }
     }
 
-    for (let count = 0; count < WORLD_CONSTANTS.STREETS_COUNT; count++) {
-      let rectX = Math.floor(Math.random() * this.width);
-      let rectY = Math.floor(Math.random() * this.height);
+    // Create streets in groups of 4 (stroke rectangles)
+    for (let count = 0; count < Config.STREETS_COUNT; count++) {
+      let rectX = Math.floor(random() * this.width);
+      let rectY = Math.floor(random() * this.height);
       let rectW =
-        Math.floor(Math.random() * WORLD_CONSTANTS.STREET_VARIATION_SIZE) +
-        WORLD_CONSTANTS.STREET_FIXED_SIZE;
+        Math.floor(random() * Config.STREET_VARIATION_SIZE) +
+        Config.STREET_FIXED_SIZE;
       let rectH =
-        Math.floor(Math.random() * WORLD_CONSTANTS.STREET_VARIATION_SIZE) +
-        WORLD_CONSTANTS.STREET_FIXED_SIZE;
+        Math.floor(random() * Config.STREET_VARIATION_SIZE) +
+        Config.STREET_FIXED_SIZE;
 
       this._carveEmptySpace(rectX, rectY, rectW, rectH, true);
     }
 
-    for (let count = 0; count < WORLD_CONSTANTS.OPEN_SPACES_COUNT; count++) {
-      let rectX = Math.floor(Math.random() * this.width);
-      let rectY = Math.floor(Math.random() * this.height);
+    // Create open spaces (filled rectangles)
+    for (let count = 0; count < Config.OPEN_SPACES_COUNT; count++) {
+      let rectX = Math.floor(random() * this.width);
+      let rectY = Math.floor(random() * this.height);
       let rectW =
-        Math.floor(Math.random() * WORLD_CONSTANTS.OPEN_SPACE_VARIATION_SIZE) +
-        WORLD_CONSTANTS.OPEN_SPACE_FIXED_SIZE;
+        Math.floor(random() * Config.OPEN_SPACE_VARIATION_SIZE) +
+        Config.OPEN_SPACE_FIXED_SIZE;
       let rectH =
-        Math.floor(Math.random() * WORLD_CONSTANTS.OPEN_SPACE_VARIATION_SIZE) +
-        WORLD_CONSTANTS.OPEN_SPACE_FIXED_SIZE;
+        Math.floor(random() * Config.OPEN_SPACE_VARIATION_SIZE) +
+        Config.OPEN_SPACE_FIXED_SIZE;
 
       this._carveEmptySpace(rectX, rectY, rectW, rectH, false);
     }
@@ -173,10 +176,12 @@ class World {
     for (let cy = startY; cy <= endY; cy++) {
       for (let cx = startX; cx <= endX; cx++) {
         if (isStroke) {
+          // Only carve the outline (top, bottom, left, right edges)
           if (cy === startY || cy === endY || cx === startX || cx === endX) {
             this.worldState[cy][cx] = ENTITY_TYPES.NONE;
           }
         } else {
+          // carve the entire filled rectangle
           this.worldState[cy][cx] = ENTITY_TYPES.NONE;
         }
       }
