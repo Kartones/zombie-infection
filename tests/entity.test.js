@@ -138,6 +138,25 @@ describe('Entity.cureInfection()', () => {
     );
     assert.ok(clearCall, 'old cell should be cleared with NONE');
   });
+
+  it('repositions the entity by calling setPosition', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world);
+    entity.x = 2;
+    entity.y = 4;
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const mockRandom = mock.method(Math, 'random', () => 0.1);
+    try {
+      entity.cureInfection();
+      assert.ok(
+        entity.x !== 2 || entity.y !== 4,
+        'entity position should change after cureInfection'
+      );
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
 });
 
 // --- Entity._draw() ---
@@ -220,11 +239,12 @@ describe('Entity._moveZombie()', () => {
     entity.activityLevel = 0;
     entity.direction = ctx.DIRECTIONS.EAST;
 
-    entity._moveZombie();
-
-    mockRandom.mock.restore();
-    // Direction was changed by _randomDirection()
-    assert.ok(entity.direction >= 1 && entity.direction <= 4);
+    try {
+      entity._moveZombie();
+      assert.equal(entity.direction, ctx.DIRECTIONS.NORTH);
+    } finally {
+      mockRandom.mock.restore();
+    }
   });
 
   it('bites humans when one is in near sight', () => {
@@ -243,6 +263,139 @@ describe('Entity._moveZombie()', () => {
 
     assert.equal(victim.type, ctx.ENTITY_TYPES.ZOMBIE);
   });
+
+  it('sets activityLevel when HUMAN_PANIC is in far sight', () => {
+    const world = makeMockWorld({
+      farLook() { return ctx.ENTITY_TYPES.HUMAN_PANIC; },
+    });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    entity.activityLevel = 0;
+
+    entity._moveZombie();
+
+    assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
+  });
+});
+
+// --- Entity._shouldMove() ---
+
+describe('Entity._shouldMove()', () => {
+  it('returns true for zombie when rand equals ZOMBIE_MOVE_CHANCE', () => {
+    const entity = makeEntity(makeMockWorld());
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+
+    assert.equal(entity._shouldMove(ctx.GAME_CONSTANTS.ZOMBIE_MOVE_CHANCE), true);
+  });
+
+  it('returns false for zombie when rand does not equal ZOMBIE_MOVE_CHANCE', () => {
+    const entity = makeEntity(makeMockWorld());
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+
+    assert.equal(entity._shouldMove(ctx.GAME_CONSTANTS.ZOMBIE_MOVE_CHANCE + 1), false);
+  });
+
+  it('returns true for human when activityLevel > 0', () => {
+    const entity = makeEntity(makeMockWorld());
+    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    entity.activityLevel = 3;
+
+    assert.equal(entity._shouldMove(0), true);
+  });
+
+  it('returns true for human when rand > panicThreshold and activityLevel is 0', () => {
+    const world = makeMockWorld({ panicThreshold: 5 });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    entity.activityLevel = 0;
+
+    assert.equal(entity._shouldMove(6), true);
+  });
+
+  it('returns false for human when rand <= panicThreshold and activityLevel is 0', () => {
+    const world = makeMockWorld({ panicThreshold: 5 });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    entity.activityLevel = 0;
+
+    assert.equal(entity._shouldMove(5), false);
+  });
+});
+
+// --- Entity._executeMove() ---
+
+describe('Entity._executeMove()', () => {
+  it('decrements y when moving NORTH into empty cell', () => {
+    const world = makeMockWorld({ nearLook() { return ctx.ENTITY_TYPES.NONE; } });
+    const entity = makeEntity(world);
+    entity.y = 5;
+    entity.direction = ctx.DIRECTIONS.NORTH;
+
+    entity._executeMove();
+
+    assert.equal(entity.y, 4);
+  });
+
+  it('increments x when moving EAST into empty cell', () => {
+    const world = makeMockWorld({ nearLook() { return ctx.ENTITY_TYPES.NONE; } });
+    const entity = makeEntity(world);
+    entity.x = 3;
+    entity.direction = ctx.DIRECTIONS.EAST;
+
+    entity._executeMove();
+
+    assert.equal(entity.x, 4);
+  });
+
+  it('increments y when moving SOUTH into empty cell', () => {
+    const world = makeMockWorld({ nearLook() { return ctx.ENTITY_TYPES.NONE; } });
+    const entity = makeEntity(world);
+    entity.y = 3;
+    entity.direction = ctx.DIRECTIONS.SOUTH;
+
+    entity._executeMove();
+
+    assert.equal(entity.y, 4);
+  });
+
+  it('decrements x when moving WEST into empty cell', () => {
+    const world = makeMockWorld({ nearLook() { return ctx.ENTITY_TYPES.NONE; } });
+    const entity = makeEntity(world);
+    entity.x = 5;
+    entity.direction = ctx.DIRECTIONS.WEST;
+
+    entity._executeMove();
+
+    assert.equal(entity.x, 4);
+  });
+
+  it('randomizes direction when cell ahead is blocked', () => {
+    const world = makeMockWorld({ nearLook() { return ctx.ENTITY_TYPES.WALL; } });
+    const entity = makeEntity(world);
+    entity.direction = ctx.DIRECTIONS.NORTH;
+    const initialX = entity.x;
+    const initialY = entity.y;
+
+    const mockRandom = mock.method(Math, 'random', () => 0.5);
+    try {
+      entity._executeMove();
+      assert.equal(entity.x, initialX);
+      assert.equal(entity.y, initialY);
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
+
+  it('decrements activityLevel when > 0', () => {
+    const world = makeMockWorld({ nearLook() { return ctx.ENTITY_TYPES.NONE; } });
+    const entity = makeEntity(world);
+    entity.activityLevel = 5;
+    entity.direction = ctx.DIRECTIONS.EAST;
+
+    entity._executeMove();
+
+    assert.equal(entity.activityLevel, 4);
+  });
 });
 
 // --- Entity._movePoliceman() ---
@@ -260,12 +413,13 @@ describe('Entity._movePoliceman()', () => {
     entity.direction = ctx.DIRECTIONS.EAST;
 
     const mockRandom = mock.method(Math, 'random', () => 0.0); // always hits
-
-    entity._movePoliceman();
-
-    mockRandom.mock.restore();
-    assert.ok(removeZombieCalled, 'removeZombieAt should be called on a hit');
-    assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
+    try {
+      entity._movePoliceman();
+      assert.ok(removeZombieCalled, 'removeZombieAt should be called on a hit');
+      assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
+    } finally {
+      mockRandom.mock.restore();
+    }
   });
 
   it('flips direction when multiple zombies in sight', () => {
@@ -277,12 +431,13 @@ describe('Entity._movePoliceman()', () => {
     entity.direction = ctx.DIRECTIONS.NORTH; // 1 → should become SOUTH (3)
 
     const mockRandom = mock.method(Math, 'random', () => 0.5); // > 1/8, no random direction
-
-    entity._movePoliceman();
-
-    mockRandom.mock.restore();
-    assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
-    assert.equal(entity.direction, ctx.DIRECTIONS.SOUTH);
+    try {
+      entity._movePoliceman();
+      assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
+      assert.equal(entity.direction, ctx.DIRECTIONS.SOUTH);
+    } finally {
+      mockRandom.mock.restore();
+    }
   });
 });
 
@@ -311,11 +466,42 @@ describe('Entity._moveHuman()', () => {
     entity.direction = ctx.DIRECTIONS.NORTH; // 1 → SOUTH (3)
 
     const mockRandom = mock.method(Math, 'random', () => 0.5); // > 1/8
+    try {
+      entity._moveHuman();
+      assert.equal(entity.direction, ctx.DIRECTIONS.SOUTH);
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
+
+  it('sets activityLevel when HUMAN_PANIC is in far sight', () => {
+    const world = makeMockWorld({
+      farLook() { return ctx.ENTITY_TYPES.HUMAN_PANIC; },
+    });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    entity.activityLevel = 0;
 
     entity._moveHuman();
 
-    mockRandom.mock.restore();
-    assert.equal(entity.direction, ctx.DIRECTIONS.SOUTH);
+    assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
+  });
+
+  it('does not flip direction when only HUMAN_PANIC is in far sight', () => {
+    const world = makeMockWorld({
+      farLook() { return ctx.ENTITY_TYPES.HUMAN_PANIC; },
+    });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    entity.direction = ctx.DIRECTIONS.NORTH;
+
+    const mockRandom = mock.method(Math, 'random', () => 0.5);
+    try {
+      entity._moveHuman();
+      assert.equal(entity.direction, ctx.DIRECTIONS.NORTH);
+    } finally {
+      mockRandom.mock.restore();
+    }
   });
 });
 
@@ -364,6 +550,22 @@ describe('Entity._shootZombie()', () => {
     entity.direction = ctx.DIRECTIONS.EAST;
 
     entity._shootZombie(ctx.ENTITY_TYPES.POLICEMAN);
+
+    assert.equal(removeZombieCalled, false);
+  });
+
+  it('is a no-op when entity type is not POLICEMAN', () => {
+    let removeZombieCalled = false;
+    const world = makeMockWorld({
+      getEntityType() { return ctx.ENTITY_TYPES.ZOMBIE; },
+      removeZombieAt() { removeZombieCalled = true; },
+    });
+    const entity = makeEntity(world);
+    entity.x = 5;
+    entity.y = 5;
+    entity.direction = ctx.DIRECTIONS.NORTH;
+
+    entity._shootZombie(ctx.ENTITY_TYPES.HUMAN);
 
     assert.equal(removeZombieCalled, false);
   });

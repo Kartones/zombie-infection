@@ -10,8 +10,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 // so tests can access them via ctx.X.
 const FILE_EXPORTS = {
   'constants.js': [
-    'ENTITY_TYPES', 'WORLD_CONSTANTS', 'COLORS', 'ENTITY_TYPE_TO_COLOR',
-    'ENTITY_CONSTANTS', 'DIRECTIONS', 'GAME_CONSTANTS',
+    'ENTITY_TYPES', 'WORLD_CONSTANTS', 'ENTITY_CONSTANTS', 'DIRECTIONS', 'GAME_CONSTANTS',
   ],
   'entity.js': ['Entity'],
   'world.js': ['World'],

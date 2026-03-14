@@ -22,26 +22,6 @@ const WORLD_CONSTANTS = {
   OPEN_SPACE_FIXED_SIZE: 10,
 };
 
-// Colors (RGB arrays)
-const COLORS = {
-  EMPTY: [0, 0, 0],
-  HUMAN: [213, 175, 213],
-  HUMAN_PANIC: [196, 43, 196],
-  ZOMBIE: [30, 170, 30],
-  WALL: [90, 90, 90],
-  POLICEMAN: [0, 100, 200],
-};
-
-// Map entity types to colors for rendering
-const ENTITY_TYPE_TO_COLOR = {
-  [ENTITY_TYPES.NONE]: COLORS.EMPTY,
-  [ENTITY_TYPES.ZOMBIE]: COLORS.ZOMBIE,
-  [ENTITY_TYPES.HUMAN]: COLORS.HUMAN,
-  [ENTITY_TYPES.HUMAN_PANIC]: COLORS.HUMAN_PANIC,
-  [ENTITY_TYPES.WALL]: COLORS.WALL,
-  [ENTITY_TYPES.POLICEMAN]: COLORS.POLICEMAN,
-};
-
 // Entity behavior constants
 const ENTITY_CONSTANTS = {
   // This one takes into account all visible entities, not just the first one

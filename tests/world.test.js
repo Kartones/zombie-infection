@@ -17,7 +17,6 @@ function makeWorld(width = 10, height = 10) {
   world.panicThreshold = 5;
   world.entities = [];
   world.worldState = Array.from({ length: height }, () => new Array(width).fill(ctx.ENTITY_TYPES.NONE));
-  world.setState = (x, y, type) => { world.worldState[y][x] = type; };
   return world;
 }
 
@@ -29,6 +28,19 @@ describe('World.getEntityType()', () => {
     world.worldState[2][5] = ctx.ENTITY_TYPES.ZOMBIE;
 
     assert.equal(world.getEntityType(5, 2), ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('returns NONE for empty cell', () => {
+    const world = makeWorld();
+
+    assert.equal(world.getEntityType(3, 3), ctx.ENTITY_TYPES.NONE);
+  });
+
+  it('returns HUMAN for human cell', () => {
+    const world = makeWorld();
+    world.worldState[4][6] = ctx.ENTITY_TYPES.HUMAN;
+
+    assert.equal(world.getEntityType(6, 4), ctx.ENTITY_TYPES.HUMAN);
   });
 });
 
@@ -56,6 +68,13 @@ describe('World.humansAt()', () => {
   it('excludes non-human entities at position', () => {
     const world = makeWorld();
     world.entities.push({ x: 3, y: 4, type: ctx.ENTITY_TYPES.ZOMBIE });
+
+    assert.equal(world.humansAt(3, 4), undefined);
+  });
+
+  it('excludes HUMAN_PANIC entities at position', () => {
+    const world = makeWorld();
+    world.entities.push({ x: 3, y: 4, type: ctx.ENTITY_TYPES.HUMAN_PANIC });
 
     assert.equal(world.humansAt(3, 4), undefined);
   });
@@ -135,6 +154,24 @@ describe('World.zombiesInDirection()', () => {
 
     assert.equal(count, 0);
   });
+
+  it('counts zombies in SOUTH direction', () => {
+    const world = makeWorld();
+    world.worldState[6][5] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const count = world.zombiesInDirection(5, 5, ctx.DIRECTIONS.SOUTH, 3);
+
+    assert.equal(count, 1);
+  });
+
+  it('counts zombies in WEST direction', () => {
+    const world = makeWorld();
+    world.worldState[5][4] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const count = world.zombiesInDirection(5, 5, ctx.DIRECTIONS.WEST, 3);
+
+    assert.equal(count, 1);
+  });
 });
 
 // --- World._look() ---
@@ -171,6 +208,42 @@ describe('World._look()', () => {
     const world = makeWorld();
 
     const result = world._look(5, 5, ctx.DIRECTIONS.EAST, 2);
+
+    assert.equal(result, ctx.ENTITY_TYPES.NONE);
+  });
+
+  it('returns ZOMBIE looking SOUTH', () => {
+    const world = makeWorld();
+    world.worldState[7][5] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const result = world._look(5, 5, ctx.DIRECTIONS.SOUTH, 5);
+
+    assert.equal(result, ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('returns ZOMBIE looking WEST', () => {
+    const world = makeWorld();
+    world.worldState[5][3] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const result = world._look(5, 5, ctx.DIRECTIONS.WEST, 5);
+
+    assert.equal(result, ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('returns HUMAN_PANIC when it finds a HUMAN_PANIC cell', () => {
+    const world = makeWorld();
+    world.worldState[4][5] = ctx.ENTITY_TYPES.HUMAN_PANIC;
+
+    const result = world._look(5, 5, ctx.DIRECTIONS.NORTH, 5);
+
+    assert.equal(result, ctx.ENTITY_TYPES.HUMAN_PANIC);
+  });
+
+  it('returns NONE when POLICEMAN is in path', () => {
+    const world = makeWorld();
+    world.worldState[7][5] = ctx.ENTITY_TYPES.POLICEMAN;
+
+    const result = world._look(5, 8, ctx.DIRECTIONS.NORTH, 5);
 
     assert.equal(result, ctx.ENTITY_TYPES.NONE);
   });
