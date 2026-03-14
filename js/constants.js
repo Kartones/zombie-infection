@@ -42,16 +42,6 @@ const ENTITY_TYPE_TO_COLOR = {
   [ENTITY_TYPES.POLICEMAN]: COLORS.POLICEMAN,
 };
 
-// Map colors to entity types for detection
-const COLOR_TO_ENTITY_TYPE = {
-  "0,0,0": ENTITY_TYPES.NONE,
-  "213,175,213": ENTITY_TYPES.HUMAN,
-  "196,43,196": ENTITY_TYPES.HUMAN_PANIC,
-  "30,170,30": ENTITY_TYPES.ZOMBIE,
-  "90,90,90": ENTITY_TYPES.WALL,
-  "0,100,200": ENTITY_TYPES.POLICEMAN,
-};
-
 // Entity behavior constants
 const ENTITY_CONSTANTS = {
   // This one takes into account all visible entities, not just the first one

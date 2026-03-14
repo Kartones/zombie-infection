@@ -23,7 +23,7 @@ Migrated from Java to Javascript (with some tweaks) from ["Zombie Infection Simu
 </ul>
 
 
-Controls are detailed at the [index.html] file.
+Controls are detailed at the [index.html](index.html) file.
 
 ## License
 

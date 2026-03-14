@@ -2,13 +2,9 @@
 
 class Game {
   constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
-    this.world = new World(
-      canvasNodeId,
-      mapWidth,
-      mapHeight,
-      GAME_CONSTANTS.PANIC_LEVEL,
-      numEntities
-    );
+    this.renderer = new Renderer(canvasNodeId, mapWidth, mapHeight);
+    this.world = new World(mapWidth, mapHeight, GAME_CONSTANTS.PANIC_LEVEL, numEntities);
+    this.renderer.renderWorld(this.world.worldState);
 
     this.paused = true;
     this.speed = 1;
@@ -27,6 +23,7 @@ class Game {
     }
 
     this.world.entities.forEach((entity) => entity.move());
+    this.renderer.renderWorld(this.world.worldState);
     this.updateId = setTimeout(
       this._update.bind(this),
       GAME_CONSTANTS.UPDATE_INTERVAL_MS * this.speed
@@ -61,7 +58,7 @@ class Game {
         minimumReached = true;
       } else {
         let removedEntity = this.world.entities.pop();
-        this.world.setCell(removedEntity.x, removedEntity.y, ENTITY_TYPES.NONE);
+        this.world.setState(removedEntity.x, removedEntity.y, ENTITY_TYPES.NONE);
       }
     }
   }
@@ -80,8 +77,10 @@ class Game {
 
   _restartWorld() {
     this.world.entities.forEach((entity) => entity.cureInfection());
+    this.world._convertToPolicemen();
     // "patient zero" will be the first entity
     this.world.entities[0].infect();
+    this.renderer.renderWorld(this.world.worldState);
   }
 
   _keydown(event) {
