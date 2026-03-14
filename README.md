@@ -25,6 +25,16 @@ Migrated from Java to Javascript (with some tweaks) from ["Zombie Infection Simu
 
 Controls are detailed at the [index.html](index.html) file.
 
+## Running locally
+
+Sound requires serving over HTTP (not `file://`). From the project root:
+
+```
+http-serve .
+```
+
+Then open `http://localhost:8080` in your browser.
+
 ## License
 
 See [LICENSE](LICENSE).

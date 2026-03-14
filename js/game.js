@@ -1,7 +1,10 @@
 "use strict";
 
+let soundSystem;
+
 class Game {
   constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
+    soundSystem = new SoundSystem();
     this.renderer = new Renderer(canvasNodeId, mapWidth, mapHeight);
     this.world = new World(mapWidth, mapHeight, GAME_CONSTANTS.PANIC_LEVEL, numEntities);
     this.renderer.renderWorld(this.world.worldState);
@@ -108,6 +111,9 @@ class Game {
       case "Plus":
         this._addEntities();
         this._restartWorld();
+        break;
+      case "KeyM":
+        soundSystem.toggleMute();
         break;
     }
   }

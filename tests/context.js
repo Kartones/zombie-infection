@@ -26,7 +26,7 @@ function loadFile(ctx, filename) {
 export function createContext() {
   // Inject the host Math so that mock.method(Math, 'random', ...) in tests
   // reaches the same object used by entity code running inside the VM.
-  const ctx = vm.createContext({ Math });
+  const ctx = vm.createContext({ Math, soundSystem: { playBite() {}, playShot() {} } });
   loadFile(ctx, 'constants.js');
   loadFile(ctx, 'entity.js');
   loadFile(ctx, 'world.js');

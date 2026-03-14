@@ -32,6 +32,7 @@ class Entity {
     for (let human of humans) {
       human.infect();
     }
+    soundSystem.playBite();
   }
 
   cureInfection() {
@@ -234,6 +235,7 @@ class Entity {
       const entityType = this.world.getEntityType(shootX, shootY);
       if (entityType === ENTITY_TYPES.ZOMBIE) {
         this.world.removeZombieAt(shootX, shootY);
+        soundSystem.playShot();
         break;
       }
     }
