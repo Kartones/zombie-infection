@@ -55,14 +55,14 @@ describe('Entity.infect()', () => {
     assert.equal(entity.type, ctx.ENTITY_TYPES.ZOMBIE);
   });
 
-  it('calls _draw() after infecting (setCell invoked)', () => {
+  it('calls renderEntity() after infecting (setCell invoked)', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.HUMAN;
 
     entity.infect();
 
-    assert.ok(world.setCellCalls.length > 0, 'setState should be called by _draw()');
+    assert.ok(world.setCellCalls.length > 0, 'setState should be called by renderEntity()');
     const last = world.setCellCalls.at(-1);
     assert.equal(last.x, entity.x);
     assert.equal(last.y, entity.y);
@@ -160,15 +160,15 @@ describe('Entity.cureInfectionAndReposition()', () => {
   });
 });
 
-// --- Entity._draw() ---
+// --- Entity.renderEntity() ---
 
-describe('Entity._draw()', () => {
+describe('Entity.renderEntity()', () => {
   it('draws ZOMBIE when type is ZOMBIE', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
 
-    entity._draw();
+    entity.renderEntity();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.ZOMBIE);
@@ -180,7 +180,7 @@ describe('Entity._draw()', () => {
     entity.type = ctx.ENTITY_TYPES.POLICEMAN;
     entity.activityLevel = 0;
 
-    entity._draw();
+    entity.renderEntity();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.POLICEMAN);
@@ -192,7 +192,7 @@ describe('Entity._draw()', () => {
     entity.type = ctx.ENTITY_TYPES.HUMAN;
     entity.activityLevel = 3;
 
-    entity._draw();
+    entity.renderEntity();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.HUMAN_PANIC);
@@ -204,7 +204,7 @@ describe('Entity._draw()', () => {
     entity.type = ctx.ENTITY_TYPES.HUMAN;
     entity.activityLevel = 0;
 
-    entity._draw();
+    entity.renderEntity();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.HUMAN);

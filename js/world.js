@@ -16,7 +16,7 @@ class World {
       .fill()
       .map(() => new Entity(this));
     this.entities.forEach((entity) => entity.setPosition());
-    this._convertToPolicemen();
+    this.upgradeHumansToPolicemen();
     this.entities[0].infect();
   }
 
@@ -30,7 +30,7 @@ class World {
     }
   }
 
-  _convertToPolicemen() {
+  upgradeHumansToPolicemen() {
     const maxPolicemen = Math.max(
       Config.MIN_POLICEMEN,
       Math.floor(this.entities.length * Config.MAX_POLICEMEN_PERCENTAGE)
@@ -52,7 +52,7 @@ class World {
         count++
       ) {
         availableHumans[count].type = ENTITY_TYPES.POLICEMAN;
-        availableHumans[count]._draw();
+        availableHumans[count].renderEntity();
       }
     }
   }

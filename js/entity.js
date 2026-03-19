@@ -20,12 +20,12 @@ class Entity {
         attemptOk = 100;
       }
     }
-    this._draw();
+    this.renderEntity();
   }
 
   infect() {
     this.type = ENTITY_TYPES.ZOMBIE;
-    this._draw();
+    this.renderEntity();
   }
 
   bite(humans) {
@@ -92,7 +92,7 @@ class Entity {
       this.direction = this._randomDirection();
     }
 
-    this._draw();
+    this.renderEntity();
 
     if (this.activityLevel > 0) {
       this.activityLevel--;
@@ -189,7 +189,7 @@ class Entity {
     return Math.floor(random() * 4) + 1;
   }
 
-  _draw() {
+  renderEntity() {
     if (this.type === ENTITY_TYPES.ZOMBIE) {
       this.world.setState(this.x, this.y, ENTITY_TYPES.ZOMBIE);
     } else if (this.type === ENTITY_TYPES.POLICEMAN) {

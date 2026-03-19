@@ -48,7 +48,7 @@ class Game {
       }
     }
 
-    this.world._convertToPolicemen();
+    this.world.upgradeHumansToPolicemen();
   }
 
   _removeEntities() {
@@ -80,7 +80,7 @@ class Game {
 
   _restartWorld() {
     this.world.entities.forEach((entity) => entity.cureInfectionAndReposition());
-    this.world._convertToPolicemen();
+    this.world.upgradeHumansToPolicemen();
     // "patient zero" will be the first entity
     this.world.entities[0].infect();
     this.renderer.renderWorld(this.world.worldState);
