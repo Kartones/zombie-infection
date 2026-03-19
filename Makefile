@@ -1,7 +1,7 @@
 .PHONY: test run
 
 test:
-	node --test 'tests/**/*.test.js'
+	node --test
 
 run:
 	http-serve .
