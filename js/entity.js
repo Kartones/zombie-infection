@@ -29,7 +29,7 @@ class Entity {
   }
 
   bite(humans) {
-    if (this.type !== ENTITY_TYPES.ZOMBIE) {
+    if (this.type !== ENTITY_TYPES.ZOMBIE || !humans || humans.length === 0) {
       return;
     }
     for (let human of humans) {
