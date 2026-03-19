@@ -1,69 +1,11 @@
 "use strict";
 
 class World {
-  constructor(canvasNodeId, mapWidth, mapHeight, panicThreshold, numEntities) {
+  constructor(mapWidth, mapHeight, panicThreshold, numEntities) {
     this.panicThreshold = panicThreshold || 5;
-
-    this.canvas = document.getElementById(canvasNodeId);
-
-    this.canvasContext = this.canvas.getContext("2d");
-
-    this.canvasContext.scale(
-      WORLD_CONSTANTS.SCALE_FACTOR,
-      WORLD_CONSTANTS.SCALE_FACTOR
-    );
 
     this.width = Math.max(2, mapWidth || 0);
     this.height = Math.max(2, mapHeight || 0);
-
-    this.scaledWidth = this.width * WORLD_CONSTANTS.SCALE_FACTOR;
-    this.scaledHeight = this.height * WORLD_CONSTANTS.SCALE_FACTOR;
-
-    this.canvas.width = this.scaledWidth;
-    this.canvas.height = this.scaledHeight;
-
-    this.canvasContext.imageSmoothingEnabled = false;
-
-    this.computedColors = {};
-    for (let color of [
-      COLORS.EMPTY,
-      COLORS.HUMAN,
-      COLORS.HUMAN_PANIC,
-      COLORS.ZOMBIE,
-      COLORS.POLICEMAN,
-    ]) {
-      let colorComponents = new Array();
-      for (
-        let pixelNum = 0;
-        pixelNum < WORLD_CONSTANTS.SCALE_FACTOR * WORLD_CONSTANTS.SCALE_FACTOR;
-        pixelNum++
-      ) {
-        colorComponents = colorComponents.concat([...color, 255]);
-      }
-      let pixels = new ImageData(
-        Uint8ClampedArray.from(colorComponents),
-        WORLD_CONSTANTS.SCALE_FACTOR
-      );
-      this.computedColors[color] = pixels;
-    }
-
-    this.computedColors[COLORS.WALL] =
-      this.computedColors[COLORS.WALL] ||
-      (() => {
-        let colorComponents = new Array();
-        for (
-          let pixelNum = 0;
-          pixelNum <
-          WORLD_CONSTANTS.SCALE_FACTOR * WORLD_CONSTANTS.SCALE_FACTOR;
-          pixelNum++
-        ) {
-          colorComponents = colorComponents.concat([...COLORS.WALL, 255]);
-        }
-        return new ImageData(
-          Uint8ClampedArray.from(colorComponents),
-          WORLD_CONSTANTS.SCALE_FACTOR
-        );
-      })();
 
     this._initializeWorldState();
     this._addWalls();
@@ -74,7 +16,7 @@ class World {
       .fill()
       .map(() => new Entity(this));
     this.entities.forEach((entity) => entity.setPosition());
-    this._convertToPolicemen();
+    this.upgradeHumansToPolicemen();
     this.entities[0].infect();
   }
 
@@ -88,17 +30,16 @@ class World {
     }
   }
 
-  _convertToPolicemen() {
+  upgradeHumansToPolicemen() {
     const maxPolicemen = Math.max(
-      GAME_CONSTANTS.MIN_POLICEMEN,
-      Math.floor(this.entities.length * GAME_CONSTANTS.MAX_POLICEMEN_PERCENTAGE)
+      Config.MIN_POLICEMEN,
+      Math.floor(this.entities.length * Config.MAX_POLICEMEN_PERCENTAGE)
     );
 
     const policemen = this.entities.filter(
       (entity) => entity.type === ENTITY_TYPES.POLICEMAN
     );
 
-    // If we have fewer policemen than max, convert some humans to policemen
     if (policemen.length < maxPolicemen) {
       const neededPolicemen = maxPolicemen - policemen.length;
       const availableHumans = this.entities.filter(
@@ -111,7 +52,7 @@ class World {
         count++
       ) {
         availableHumans[count].type = ENTITY_TYPES.POLICEMAN;
-        availableHumans[count]._draw();
+        availableHumans[count].renderEntity();
       }
     }
   }
@@ -120,18 +61,8 @@ class World {
     return this.worldState[y][x];
   }
 
-  setCell(x, y, entityType) {
+  setState(x, y, entityType) {
     this.worldState[y][x] = entityType;
-    const color = ENTITY_TYPE_TO_COLOR[entityType];
-    this._renderCell(x, y, color);
-  }
-
-  _renderCell(x, y, color) {
-    this.canvasContext.putImageData(
-      this.computedColors[color],
-      x * WORLD_CONSTANTS.SCALE_FACTOR,
-      y * WORLD_CONSTANTS.SCALE_FACTOR
-    );
   }
 
   nearLook(x, y, direction) {
@@ -194,7 +125,7 @@ class World {
         entity.x === x && entity.y === y && entity.type === ENTITY_TYPES.ZOMBIE
     );
     if (zombieAtPos) {
-      this.setCell(zombieAtPos.x, zombieAtPos.y, ENTITY_TYPES.NONE);
+      this.setState(zombieAtPos.x, zombieAtPos.y, ENTITY_TYPES.NONE);
       this.entities = this.entities.filter((entity) => entity !== zombieAtPos);
     }
   }
@@ -208,35 +139,32 @@ class World {
     }
 
     // Create streets in groups of 4 (stroke rectangles)
-    for (let count = 0; count < WORLD_CONSTANTS.STREETS_COUNT; count++) {
-      let rectX = Math.floor(Math.random() * this.width);
-      let rectY = Math.floor(Math.random() * this.height);
+    for (let count = 0; count < Config.STREETS_COUNT; count++) {
+      let rectX = Math.floor(random() * this.width);
+      let rectY = Math.floor(random() * this.height);
       let rectW =
-        Math.floor(Math.random() * WORLD_CONSTANTS.STREET_VARIATION_SIZE) +
-        WORLD_CONSTANTS.STREET_FIXED_SIZE;
+        Math.floor(random() * Config.STREET_VARIATION_SIZE) +
+        Config.STREET_FIXED_SIZE;
       let rectH =
-        Math.floor(Math.random() * WORLD_CONSTANTS.STREET_VARIATION_SIZE) +
-        WORLD_CONSTANTS.STREET_FIXED_SIZE;
+        Math.floor(random() * Config.STREET_VARIATION_SIZE) +
+        Config.STREET_FIXED_SIZE;
 
       this._carveEmptySpace(rectX, rectY, rectW, rectH, true);
     }
 
     // Create open spaces (filled rectangles)
-    for (let count = 0; count < WORLD_CONSTANTS.OPEN_SPACES_COUNT; count++) {
-      let rectX = Math.floor(Math.random() * this.width);
-      let rectY = Math.floor(Math.random() * this.height);
+    for (let count = 0; count < Config.OPEN_SPACES_COUNT; count++) {
+      let rectX = Math.floor(random() * this.width);
+      let rectY = Math.floor(random() * this.height);
       let rectW =
-        Math.floor(Math.random() * WORLD_CONSTANTS.OPEN_SPACE_VARIATION_SIZE) +
-        WORLD_CONSTANTS.OPEN_SPACE_FIXED_SIZE;
+        Math.floor(random() * Config.OPEN_SPACE_VARIATION_SIZE) +
+        Config.OPEN_SPACE_FIXED_SIZE;
       let rectH =
-        Math.floor(Math.random() * WORLD_CONSTANTS.OPEN_SPACE_VARIATION_SIZE) +
-        WORLD_CONSTANTS.OPEN_SPACE_FIXED_SIZE;
+        Math.floor(random() * Config.OPEN_SPACE_VARIATION_SIZE) +
+        Config.OPEN_SPACE_FIXED_SIZE;
 
       this._carveEmptySpace(rectX, rectY, rectW, rectH, false);
     }
-
-    // Render the final world state to canvas
-    this._renderWorldState();
   }
 
   _carveEmptySpace(x, y, width, height, isStroke) {
@@ -256,14 +184,6 @@ class World {
           // carve the entire filled rectangle
           this.worldState[cy][cx] = ENTITY_TYPES.NONE;
         }
-      }
-    }
-  }
-
-  _renderWorldState() {
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        this._renderCell(x, y, ENTITY_TYPE_TO_COLOR[this.worldState[y][x]]);
       }
     }
   }
@@ -307,6 +227,4 @@ class World {
 
 World.prototype.SCALE_FACTOR = WORLD_CONSTANTS.SCALE_FACTOR;
 World.prototype.ACTIVE_AMOUNT = WORLD_CONSTANTS.ACTIVE_AMOUNT;
-
-World.prototype.COLOR = COLORS;
 World.prototype.DIRECTIONS = DIRECTIONS;
