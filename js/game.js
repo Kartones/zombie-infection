@@ -1,12 +1,10 @@
 "use strict";
 
-let soundSystem;
-
 class Game {
   constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
-    soundSystem = new SoundSystem();
+    this.soundSystem = new SoundSystem();
     this.renderer = new Renderer(canvasNodeId, mapWidth, mapHeight);
-    this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, numEntities);
+    this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, numEntities, this.soundSystem);
     this.renderer.renderWorld(this.world.worldState);
 
     this.paused = true;
@@ -79,7 +77,7 @@ class Game {
   }
 
   _restartWorld() {
-    this.world.entities.forEach((entity) => entity.cureInfectionAndReposition());
+    this.world.entities.forEach((entity) => entity.reset());
     this.world.upgradeHumansToPolicemen();
     // "patient zero" will be the first entity
     this.world.entities[0].infect();
@@ -113,7 +111,7 @@ class Game {
         this._restartWorld();
         break;
       case "KeyM":
-        soundSystem.toggleMute();
+        this.soundSystem.toggleMute();
         break;
     }
   }

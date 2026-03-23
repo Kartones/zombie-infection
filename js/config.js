@@ -1,5 +1,7 @@
 "use strict";
 
+// This file contains configuration parameters that can be tweaked to change the behavior of the game.
+
 class Config {
   static STREETS_COUNT = 80;
   static STREET_VARIATION_SIZE = 60;
@@ -16,3 +18,11 @@ class Config {
   static UPDATE_INTERVAL_MS = 50;
   static ENTITIES_PER_BATCH = 100;
 }
+
+const GAME_CONSTANTS = {
+  MIN_ENTITIES: 100,
+  MAX_ENTITIES: 4000,
+  MOVEMENT_RANDOM_FACTOR: 10,
+  // It'll move if random number [0, MOVEMENT_RANDOM_FACTOR) is less than this
+  ZOMBIE_MOVE_CHANCE: 2,
+};

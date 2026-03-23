@@ -28,6 +28,7 @@ function makeMockWorld(overrides = {}) {
     farLook() { return ctx.ENTITY_TYPES.NONE; },
     removeZombieAt() {},
     zombiesInDirection() { return 0; },
+    soundSystem: { playBite() {}, playShot() {} },
     get setCellCalls() { return setCellCalls; },
     ...overrides,
   };
@@ -55,14 +56,14 @@ describe('Entity.infect()', () => {
     assert.equal(entity.type, ctx.ENTITY_TYPES.ZOMBIE);
   });
 
-  it('calls renderEntity() after infecting (setCell invoked)', () => {
+  it('calls render() after infecting (setCell invoked)', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.HUMAN;
 
     entity.infect();
 
-    assert.ok(world.setCellCalls.length > 0, 'setState should be called by renderEntity()');
+    assert.ok(world.setCellCalls.length > 0, 'setState should be called by render()');
     const last = world.setCellCalls.at(-1);
     assert.equal(last.x, entity.x);
     assert.equal(last.y, entity.y);
@@ -100,15 +101,15 @@ describe('Entity.bite()', () => {
   });
 });
 
-// --- Entity.cureInfectionAndReposition() ---
+// --- Entity.reset() ---
 
-describe('Entity.cureInfectionAndReposition()', () => {
+describe('Entity.reset()', () => {
   it('sets type to HUMAN', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
 
-    entity.cureInfectionAndReposition();
+    entity.reset();
 
     assert.equal(entity.type, ctx.ENTITY_TYPES.HUMAN);
   });
@@ -119,7 +120,7 @@ describe('Entity.cureInfectionAndReposition()', () => {
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
     entity.activityLevel = 5;
 
-    entity.cureInfectionAndReposition();
+    entity.reset();
 
     assert.equal(entity.activityLevel, 0);
   });
@@ -132,7 +133,7 @@ describe('Entity.cureInfectionAndReposition()', () => {
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
     world.worldState[4][2] = ctx.ENTITY_TYPES.ZOMBIE;
 
-    entity.cureInfectionAndReposition();
+    entity.reset();
 
     const clearCall = world.setCellCalls.find(
       c => c.x === 2 && c.y === 4 && c.type === ctx.ENTITY_TYPES.NONE
@@ -149,10 +150,10 @@ describe('Entity.cureInfectionAndReposition()', () => {
 
     const mockRandom = mock.method(Math, 'random', () => 0.1);
     try {
-      entity.cureInfectionAndReposition();
+      entity.reset();
       assert.ok(
         entity.x !== 2 || entity.y !== 4,
-        'entity position should change after cureInfectionAndReposition'
+        'entity position should change after reset'
       );
     } finally {
       mockRandom.mock.restore();
@@ -160,15 +161,15 @@ describe('Entity.cureInfectionAndReposition()', () => {
   });
 });
 
-// --- Entity.renderEntity() ---
+// --- Entity.render() ---
 
-describe('Entity.renderEntity()', () => {
+describe('Entity.render()', () => {
   it('draws ZOMBIE when type is ZOMBIE', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
 
-    entity.renderEntity();
+    entity.render();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.ZOMBIE);
@@ -180,7 +181,7 @@ describe('Entity.renderEntity()', () => {
     entity.type = ctx.ENTITY_TYPES.POLICEMAN;
     entity.activityLevel = 0;
 
-    entity.renderEntity();
+    entity.render();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.POLICEMAN);
@@ -192,7 +193,7 @@ describe('Entity.renderEntity()', () => {
     entity.type = ctx.ENTITY_TYPES.HUMAN;
     entity.activityLevel = 3;
 
-    entity.renderEntity();
+    entity.render();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.HUMAN_PANIC);
@@ -204,7 +205,7 @@ describe('Entity.renderEntity()', () => {
     entity.type = ctx.ENTITY_TYPES.HUMAN;
     entity.activityLevel = 0;
 
-    entity.renderEntity();
+    entity.render();
 
     const last = world.setCellCalls.at(-1);
     assert.equal(last.type, ctx.ENTITY_TYPES.HUMAN);

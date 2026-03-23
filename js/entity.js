@@ -20,12 +20,12 @@ class Entity {
         attemptOk = 100;
       }
     }
-    this.renderEntity();
+    this.render();
   }
 
   infect() {
     this.type = ENTITY_TYPES.ZOMBIE;
-    this.renderEntity();
+    this.render();
   }
 
   bite(humans) {
@@ -35,10 +35,10 @@ class Entity {
     for (let human of humans) {
       human.infect();
     }
-    soundSystem.playBite();
+    this.world.soundSystem.playBite();
   }
 
-  cureInfectionAndReposition() {
+  reset() {
     this.type = ENTITY_TYPES.HUMAN;
     this.activityLevel = 0;
 
@@ -92,7 +92,7 @@ class Entity {
       this.direction = this._randomDirection();
     }
 
-    this.renderEntity();
+    this.render();
 
     if (this.activityLevel > 0) {
       this.activityLevel--;
@@ -189,7 +189,7 @@ class Entity {
     return Math.floor(random() * 4) + 1;
   }
 
-  renderEntity() {
+  render() {
     if (this.type === ENTITY_TYPES.ZOMBIE) {
       this.world.setState(this.x, this.y, ENTITY_TYPES.ZOMBIE);
     } else if (this.type === ENTITY_TYPES.POLICEMAN) {
@@ -201,6 +201,7 @@ class Entity {
     }
   }
 
+  // Shoot in the current direction, find and remove the first zombie
   _shootZombie(entityType) {
     let shootDistance = 0;
     if (entityType === ENTITY_TYPES.POLICEMAN) {
@@ -238,7 +239,7 @@ class Entity {
       const entityType = this.world.getEntityType(shootX, shootY);
       if (entityType === ENTITY_TYPES.ZOMBIE) {
         this.world.removeZombieAt(shootX, shootY);
-        soundSystem.playShot();
+        this.world.soundSystem.playShot();
         break;
       }
     }

@@ -1,10 +1,12 @@
 "use strict";
 
+// Depends on ENTITY_TYPES (constants.js), WORLD_CONSTANTS (constants.js), and PIXI (pixi.min.js),
+// loaded before this file in index.html.
 const ENTITY_COLORS = {
   [ENTITY_TYPES.NONE]:       0x000000,
   [ENTITY_TYPES.ZOMBIE]:     0x1EAA1E,
   [ENTITY_TYPES.HUMAN]:      0xD5AFD5,
-  [ENTITY_TYPES.HUMAN_PANIC]:0xC42BC4,
+  [ENTITY_TYPES.HUMAN_PANIC]: 0xC42BC4,
   [ENTITY_TYPES.WALL]:       0x5A5A5A,
   [ENTITY_TYPES.POLICEMAN]:  0x0064C8,
 };
@@ -16,6 +18,7 @@ class Renderer {
 
     const scale = WORLD_CONSTANTS.SCALE_FACTOR;
     const canvas = document.getElementById(canvasNodeId);
+    if (!canvas) throw new Error(`Canvas element not found: ${canvasNodeId}`);
 
     this._app = new PIXI.Application({
       view: canvas,

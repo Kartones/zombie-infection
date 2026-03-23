@@ -1,7 +1,8 @@
 "use strict";
 
 class World {
-  constructor(mapWidth, mapHeight, panicThreshold, numEntities) {
+  constructor(mapWidth, mapHeight, panicThreshold, numEntities, soundSystem) {
+    this.soundSystem = soundSystem;
     this.panicThreshold = panicThreshold || 5;
 
     this.width = Math.max(2, mapWidth || 0);
@@ -52,7 +53,7 @@ class World {
         count++
       ) {
         availableHumans[count].type = ENTITY_TYPES.POLICEMAN;
-        availableHumans[count].renderEntity();
+        availableHumans[count].render();
       }
     }
   }

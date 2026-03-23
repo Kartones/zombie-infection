@@ -1,5 +1,7 @@
 "use strict";
 
+// This file contains fixed constants, whose values are not expected to change.
+
 // Entity types
 const ENTITY_TYPES = {
   NONE: 0,
@@ -33,11 +35,3 @@ const DIRECTIONS = {
   WEST: 4,
 };
 
-// Game settings
-const GAME_CONSTANTS = {
-  MIN_ENTITIES: 100,
-  MAX_ENTITIES: 4000,
-  MOVEMENT_RANDOM_FACTOR: 10,
-  // It'll move if random number [0, MOVEMENT_RANDOM_FACTOR) is less than this
-  ZOMBIE_MOVE_CHANCE: 2,
-};
