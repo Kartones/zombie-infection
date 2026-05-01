@@ -17,6 +17,13 @@ class Config {
   static PANIC_LEVEL = 5;
   static UPDATE_INTERVAL_MS = 50;
   static ENTITIES_PER_BATCH = 100;
+
+  static SCALE_FACTOR = 6;
+  static SHOT_VIEW_DISTANCE = 5;
+  static NEAR_LOOK_DISTANCE = 1;
+  static FAR_LOOK_DISTANCE = 10;
+  static SHOOT_PISTOL_DISTANCE = 2;
+  static INITIAL_ENTITIES = 300;
 }
 
 const GAME_CONSTANTS = {

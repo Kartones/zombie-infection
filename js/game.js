@@ -3,19 +3,25 @@
 class Game {
   constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
     this.soundSystem = new SoundSystem();
-    this.renderer = new Renderer(canvasNodeId, mapWidth, mapHeight);
     this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, numEntities, this.soundSystem);
-    this.renderer.renderWorld(this.world.worldState);
+    this.renderer = new Renderer(canvasNodeId, this.world.width, this.world.height);
+    this.renderer.render(this.world.worldState, this.world.entities);
 
     this.paused = true;
     this.speed = 1;
     this.updateId = undefined;
 
-    document.addEventListener("keydown", this._keydown.bind(this));
+    this._keydownHandler = this._keydown.bind(this);
+    this._pauseHandler = this._pauseOrUnpause.bind(this);
+
+    document.addEventListener("keydown", this._keydownHandler);
 
     document
       .getElementById("game-canvas")
-      .addEventListener("click", this._pauseOrUnpause.bind(this));
+      .addEventListener("click", this._pauseHandler);
+
+    this._updateStats();
+    this._statsInterval = setInterval(this._updateStats.bind(this), 1000);
   }
 
   _update() {
@@ -24,7 +30,7 @@ class Game {
     }
 
     this.world.entities.forEach((entity) => entity.move());
-    this.renderer.renderWorld(this.world.worldState);
+    this.renderer.render(this.world.worldState, this.world.entities);
     this.updateId = setTimeout(
       this._update.bind(this),
       Config.UPDATE_INTERVAL_MS * this.speed
@@ -81,7 +87,17 @@ class Game {
     this.world.upgradeHumansToPolicemen();
     // "patient zero" will be the first entity
     this.world.entities[0].infect();
-    this.renderer.renderWorld(this.world.worldState);
+    this.renderer.render(this.world.worldState, this.world.entities);
+    this._updateStats();
+  }
+
+  _updateStats() {
+    const { humans, panicked, policemen, panickedPolicemen, zombies } = this.world.getStats();
+    document.getElementById('stat-humans').textContent = humans;
+    document.getElementById('stat-panicked').textContent = panicked;
+    document.getElementById('stat-policemen').textContent = policemen;
+    document.getElementById('stat-panicked-policemen').textContent = panickedPolicemen;
+    document.getElementById('stat-zombies').textContent = zombies;
   }
 
   _keydown(event) {
@@ -114,6 +130,14 @@ class Game {
         this.soundSystem.toggleMute();
         break;
     }
+  }
+
+  destroy() {
+    clearTimeout(this.updateId);
+    clearInterval(this._statsInterval);
+    document.removeEventListener('keydown', this._keydownHandler);
+    document.getElementById('game-canvas').removeEventListener('click', this._pauseHandler);
+    this.renderer.destroy();
   }
 }
 

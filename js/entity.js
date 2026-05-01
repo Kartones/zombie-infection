@@ -11,6 +11,10 @@ class Entity {
     this.activityLevel = 0;
   }
 
+  get isPanicking() {
+    return this.activityLevel > 0;
+  }
+
   setPosition() {
     for (let attemptOk = 0; attemptOk < 100; attemptOk++) {
       this.x = Math.floor(random() * this.world.width);
@@ -102,7 +106,7 @@ class Entity {
   _moveZombie() {
     const target = this.world.farLook(this.x, this.y, this.direction);
 
-    if (target === ENTITY_TYPES.HUMAN || target === ENTITY_TYPES.HUMAN_PANIC) {
+    if (target === ENTITY_TYPES.HUMAN || target === ENTITY_TYPES.POLICEMAN) {
       this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
     }
 
@@ -111,7 +115,7 @@ class Entity {
     }
 
     const victim = this.world.nearLook(this.x, this.y, this.direction);
-    if (victim === ENTITY_TYPES.HUMAN || victim === ENTITY_TYPES.HUMAN_PANIC) {
+    if (victim === ENTITY_TYPES.HUMAN || victim === ENTITY_TYPES.POLICEMAN) {
       let dx = this.x;
       let dy = this.y;
 
@@ -142,7 +146,7 @@ class Entity {
       this.x,
       this.y,
       this.direction,
-      ENTITY_CONSTANTS.SHOT_VIEW_DISTANCE
+      Config.SHOT_VIEW_DISTANCE
     );
 
     if (zombieCount === 1) {
@@ -166,10 +170,7 @@ class Entity {
   _moveHuman() {
     const target = this.world.farLook(this.x, this.y, this.direction);
 
-    if (
-      target === ENTITY_TYPES.ZOMBIE ||
-      target === ENTITY_TYPES.HUMAN_PANIC
-    ) {
+    if (target === ENTITY_TYPES.ZOMBIE || target === ENTITY_STATES.PANICKING) {
       this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
     }
 
@@ -192,10 +193,10 @@ class Entity {
   render() {
     if (this.type === ENTITY_TYPES.ZOMBIE) {
       this.world.setState(this.x, this.y, ENTITY_TYPES.ZOMBIE);
+    } else if (this.isPanicking) {
+      this.world.setState(this.x, this.y, ENTITY_STATES.PANICKING);
     } else if (this.type === ENTITY_TYPES.POLICEMAN) {
       this.world.setState(this.x, this.y, ENTITY_TYPES.POLICEMAN);
-    } else if (this.activityLevel > 0) {
-      this.world.setState(this.x, this.y, ENTITY_TYPES.HUMAN_PANIC);
     } else {
       this.world.setState(this.x, this.y, ENTITY_TYPES.HUMAN);
     }
@@ -205,7 +206,7 @@ class Entity {
   _shootZombie(entityType) {
     let shootDistance = 0;
     if (entityType === ENTITY_TYPES.POLICEMAN) {
-      shootDistance = ENTITY_CONSTANTS.SHOOT_PISTOL_DISTANCE;
+      shootDistance = Config.SHOOT_PISTOL_DISTANCE;
     }
 
     let shootX = this.x;

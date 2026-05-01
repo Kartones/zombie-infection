@@ -7,24 +7,18 @@ const ENTITY_TYPES = {
   NONE: 0,
   ZOMBIE: 1,
   HUMAN: 2,
-  HUMAN_PANIC: 3,
   WALL: 4,
   POLICEMAN: 5,
 };
 
-// World constants
-const WORLD_CONSTANTS = {
-  SCALE_FACTOR: 4,
-  ACTIVE_AMOUNT: 10,
+// Entity states (orthogonal to type)
+const ENTITY_STATES = {
+  PANICKING: 3,
 };
 
-// Entity behavior constants
-const ENTITY_CONSTANTS = {
-  // This one takes into account all visible entities, not just the first one
-  SHOT_VIEW_DISTANCE: 5,
-  NEAR_LOOK_DISTANCE: 1,
-  FAR_LOOK_DISTANCE: 10,
-  SHOOT_PISTOL_DISTANCE: 2,
+// World constants
+const WORLD_CONSTANTS = {
+  ACTIVE_AMOUNT: 10,
 };
 
 // Directions
@@ -35,3 +29,7 @@ const DIRECTIONS = {
   WEST: 4,
 };
 
+// natural sprite height in pixels (sprites are currently 1×3 px)
+const SPRITE_HEIGHT = 3;
+// Draw extra rows at the top to ensure that sprites are always fully rendered when on the top edge of the map.
+const TOP_PADDING_ROWS = SPRITE_HEIGHT - 1;

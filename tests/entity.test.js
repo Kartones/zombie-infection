@@ -187,7 +187,7 @@ describe('Entity.render()', () => {
     assert.equal(last.type, ctx.ENTITY_TYPES.POLICEMAN);
   });
 
-  it('draws HUMAN_PANIC when human with activityLevel > 0', () => {
+  it('sets PANICKING state when human with activityLevel > 0', () => {
     const world = makeMockWorld();
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.HUMAN;
@@ -196,7 +196,7 @@ describe('Entity.render()', () => {
     entity.render();
 
     const last = world.setCellCalls.at(-1);
-    assert.equal(last.type, ctx.ENTITY_TYPES.HUMAN_PANIC);
+    assert.equal(last.type, ctx.ENTITY_STATES.PANICKING);
   });
 
   it('draws HUMAN when human with activityLevel === 0', () => {
@@ -266,9 +266,26 @@ describe('Entity._moveZombie()', () => {
     assert.equal(victim.type, ctx.ENTITY_TYPES.ZOMBIE);
   });
 
-  it('sets activityLevel when HUMAN_PANIC is in far sight', () => {
+  it('bites policeman when one is in near sight', () => {
+    const victim = makeEntity(makeMockWorld());
+    victim.type = ctx.ENTITY_TYPES.POLICEMAN;
+
     const world = makeMockWorld({
-      farLook() { return ctx.ENTITY_TYPES.HUMAN_PANIC; },
+      nearLook() { return ctx.ENTITY_TYPES.POLICEMAN; },
+      humansAt() { return [victim]; },
+    });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    entity.direction = ctx.DIRECTIONS.EAST;
+
+    entity._moveZombie();
+
+    assert.equal(victim.type, ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('sets activityLevel when POLICEMAN is in far sight', () => {
+    const world = makeMockWorld({
+      farLook() { return ctx.ENTITY_TYPES.POLICEMAN; },
     });
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.ZOMBIE;
@@ -476,9 +493,9 @@ describe('Entity._moveHuman()', () => {
     }
   });
 
-  it('sets activityLevel when HUMAN_PANIC is in far sight', () => {
+  it('sets activityLevel when PANICKING entity is in far sight', () => {
     const world = makeMockWorld({
-      farLook() { return ctx.ENTITY_TYPES.HUMAN_PANIC; },
+      farLook() { return ctx.ENTITY_STATES.PANICKING; },
     });
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.HUMAN;
@@ -489,9 +506,9 @@ describe('Entity._moveHuman()', () => {
     assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
   });
 
-  it('does not flip direction when only HUMAN_PANIC is in far sight', () => {
+  it('does not flip direction when only PANICKING entity is in far sight', () => {
     const world = makeMockWorld({
-      farLook() { return ctx.ENTITY_TYPES.HUMAN_PANIC; },
+      farLook() { return ctx.ENTITY_STATES.PANICKING; },
     });
     const entity = makeEntity(world);
     entity.type = ctx.ENTITY_TYPES.HUMAN;

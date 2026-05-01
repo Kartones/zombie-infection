@@ -10,6 +10,10 @@ class World {
 
     this._initializeWorldState();
     this._addWalls();
+    for (let i = 0; i < TOP_PADDING_ROWS; i++) {
+      this.worldState.unshift(new Array(this.width).fill(ENTITY_TYPES.WALL));
+    }
+    this.height += TOP_PADDING_ROWS;
 
     let amountEntities = Math.min(this.width * this.height - 2, numEntities);
 
@@ -58,6 +62,20 @@ class World {
     }
   }
 
+  getStats() {
+    let humans = 0, panicked = 0, policemen = 0, panickedPolicemen = 0, zombies = 0;
+    for (const entity of this.entities) {
+      if (entity.type === ENTITY_TYPES.ZOMBIE) zombies++;
+      else if (entity.type === ENTITY_TYPES.POLICEMAN) {
+        if (entity.activityLevel > 0) panickedPolicemen++;
+        else policemen++;
+      }
+      else if (entity.activityLevel > 0) panicked++;
+      else humans++;
+    }
+    return { humans, panicked, policemen, panickedPolicemen, zombies };
+  }
+
   getEntityType(x, y) {
     return this.worldState[y][x];
   }
@@ -67,17 +85,17 @@ class World {
   }
 
   nearLook(x, y, direction) {
-    return this._look(x, y, direction, ENTITY_CONSTANTS.NEAR_LOOK_DISTANCE);
+    return this._look(x, y, direction, Config.NEAR_LOOK_DISTANCE);
   }
 
   farLook(x, y, direction) {
-    return this._look(x, y, direction, ENTITY_CONSTANTS.FAR_LOOK_DISTANCE);
+    return this._look(x, y, direction, Config.FAR_LOOK_DISTANCE);
   }
 
   humansAt(x, y) {
     let matches = this.entities
       .filter((entity) => entity.x === x && entity.y === y)
-      .filter((entity) => entity.type === ENTITY_TYPES.HUMAN);
+      .filter((entity) => entity.type === ENTITY_TYPES.HUMAN || entity.type === ENTITY_TYPES.POLICEMAN);
     return matches.length > 0 ? matches : undefined;
   }
 
@@ -212,12 +230,14 @@ class World {
         const entityType = this.getEntityType(x, y);
         if (entityType === ENTITY_TYPES.WALL) {
           return ENTITY_TYPES.WALL;
-        } else if (entityType === ENTITY_TYPES.HUMAN_PANIC) {
-          return ENTITY_TYPES.HUMAN_PANIC;
+        } else if (entityType === ENTITY_STATES.PANICKING) {
+          return ENTITY_STATES.PANICKING;
         } else if (entityType === ENTITY_TYPES.HUMAN) {
           return ENTITY_TYPES.HUMAN;
         } else if (entityType === ENTITY_TYPES.ZOMBIE) {
           return ENTITY_TYPES.ZOMBIE;
+        } else if (entityType === ENTITY_TYPES.POLICEMAN) {
+          return ENTITY_TYPES.POLICEMAN;
         }
       }
     }
@@ -226,6 +246,6 @@ class World {
   }
 }
 
-World.prototype.SCALE_FACTOR = WORLD_CONSTANTS.SCALE_FACTOR;
+World.prototype.SCALE_FACTOR = Config.SCALE_FACTOR;
 World.prototype.ACTIVE_AMOUNT = WORLD_CONSTANTS.ACTIVE_AMOUNT;
 World.prototype.DIRECTIONS = DIRECTIONS;
