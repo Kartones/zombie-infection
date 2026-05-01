@@ -18,17 +18,7 @@ const ENTITY_STATES = {
 
 // World constants
 const WORLD_CONSTANTS = {
-  SCALE_FACTOR: 6,
   ACTIVE_AMOUNT: 10,
-};
-
-// Entity behavior constants
-const ENTITY_CONSTANTS = {
-  // This one takes into account all visible entities, not just the first one
-  SHOT_VIEW_DISTANCE: 5,
-  NEAR_LOOK_DISTANCE: 1,
-  FAR_LOOK_DISTANCE: 10,
-  SHOOT_PISTOL_DISTANCE: 2,
 };
 
 // Directions

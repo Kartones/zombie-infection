@@ -11,14 +11,17 @@ class Game {
     this.speed = 1;
     this.updateId = undefined;
 
-    document.addEventListener("keydown", this._keydown.bind(this));
+    this._keydownHandler = this._keydown.bind(this);
+    this._pauseHandler = this._pauseOrUnpause.bind(this);
+
+    document.addEventListener("keydown", this._keydownHandler);
 
     document
       .getElementById("game-canvas")
-      .addEventListener("click", this._pauseOrUnpause.bind(this));
+      .addEventListener("click", this._pauseHandler);
 
     this._updateStats();
-    setInterval(this._updateStats.bind(this), 1000);
+    this._statsInterval = setInterval(this._updateStats.bind(this), 1000);
   }
 
   _update() {
@@ -127,6 +130,14 @@ class Game {
         this.soundSystem.toggleMute();
         break;
     }
+  }
+
+  destroy() {
+    clearTimeout(this.updateId);
+    clearInterval(this._statsInterval);
+    document.removeEventListener('keydown', this._keydownHandler);
+    document.getElementById('game-canvas').removeEventListener('click', this._pauseHandler);
+    this.renderer.destroy();
   }
 }
 

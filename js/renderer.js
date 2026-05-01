@@ -23,7 +23,7 @@ class Renderer {
     this._width  = Math.max(2, mapWidth  || 0);
     this._height = Math.max(2, mapHeight || 0);
 
-    const scale  = WORLD_CONSTANTS.SCALE_FACTOR;
+    const scale  = Config.SCALE_FACTOR;
     const canvas = document.getElementById(canvasNodeId);
     if (!canvas) throw new Error(`Canvas element not found: ${canvasNodeId}`);
 
@@ -89,7 +89,7 @@ class Renderer {
   }
 
   _updateEntitySprite(sprite, entity) {
-    const scale = WORLD_CONSTANTS.SCALE_FACTOR;
+    const scale = Config.SCALE_FACTOR;
 
     sprite.texture = this._spriteTextures[this._spritePathFor(entity)];
     sprite.scale.set(scale);
@@ -142,5 +142,9 @@ class Renderer {
       textures[path] = PIXI.Texture.from(path);
     }
     return textures;
+  }
+
+  destroy() {
+    this._app.destroy(false);
   }
 }

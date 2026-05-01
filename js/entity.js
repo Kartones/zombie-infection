@@ -146,7 +146,7 @@ class Entity {
       this.x,
       this.y,
       this.direction,
-      ENTITY_CONSTANTS.SHOT_VIEW_DISTANCE
+      Config.SHOT_VIEW_DISTANCE
     );
 
     if (zombieCount === 1) {
@@ -206,7 +206,7 @@ class Entity {
   _shootZombie(entityType) {
     let shootDistance = 0;
     if (entityType === ENTITY_TYPES.POLICEMAN) {
-      shootDistance = ENTITY_CONSTANTS.SHOOT_PISTOL_DISTANCE;
+      shootDistance = Config.SHOOT_PISTOL_DISTANCE;
     }
 
     let shootX = this.x;

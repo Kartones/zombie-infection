@@ -81,11 +81,11 @@ class World {
   }
 
   nearLook(x, y, direction) {
-    return this._look(x, y, direction, ENTITY_CONSTANTS.NEAR_LOOK_DISTANCE);
+    return this._look(x, y, direction, Config.NEAR_LOOK_DISTANCE);
   }
 
   farLook(x, y, direction) {
-    return this._look(x, y, direction, ENTITY_CONSTANTS.FAR_LOOK_DISTANCE);
+    return this._look(x, y, direction, Config.FAR_LOOK_DISTANCE);
   }
 
   humansAt(x, y) {
@@ -242,6 +242,6 @@ class World {
   }
 }
 
-World.prototype.SCALE_FACTOR = WORLD_CONSTANTS.SCALE_FACTOR;
+World.prototype.SCALE_FACTOR = Config.SCALE_FACTOR;
 World.prototype.ACTIVE_AMOUNT = WORLD_CONSTANTS.ACTIVE_AMOUNT;
 World.prototype.DIRECTIONS = DIRECTIONS;

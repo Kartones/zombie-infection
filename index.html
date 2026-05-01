@@ -40,7 +40,13 @@ p, ul, li, a {
 .footer, .footer a {
     font-size: 14px;
 }
-
+details { margin: 12px 0; }
+summary { color: lightgreen; cursor: pointer; font-size: 16px; }
+.config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin: 10px 0; }
+.config-grid label { color: lightgray; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
+.config-grid input[type=number] { width: 80px; background: #2a2a2a; color: lightgray; border: 1px solid #555; padding: 3px 6px; font-size: 14px; }
+#apply-config { margin-top: 8px; padding: 6px 18px; background: #1a3a1a; color: lightgreen; border: 1px solid #3a7a3a; cursor: pointer; font-size: 14px; }
+#apply-config:hover { background: #2a5a2a; }
 </style>
 </head>
 <body>
@@ -59,6 +65,31 @@ p, ul, li, a {
   &nbsp;&nbsp;
   <span class="entity-zombie">Zombies: <span id="stat-zombies">0</span></span>
 </p>
+
+<details id="config-panel">
+  <summary>Settings</summary>
+  <div class="config-grid">
+    <label>Scale factor<input id="cfg-scale-factor" type="number" min="1" max="20"></label>
+    <label>Shot view distance<input id="cfg-shot-view" type="number" min="1" max="30"></label>
+    <label>Near look distance<input id="cfg-near-look" type="number" min="1" max="10"></label>
+    <label>Far look distance<input id="cfg-far-look" type="number" min="1" max="30"></label>
+    <label>Shoot pistol distance<input id="cfg-shoot-pistol" type="number" min="1" max="10"></label>
+    <label>Initial entities<input id="cfg-entities" type="number" min="10" max="4000"></label>
+    <label>Min policemen<input id="cfg-min-policemen" type="number" min="0" max="50"></label>
+    <label>Max policemen %<input id="cfg-max-police-pct" type="number" min="0" max="100" step="1"></label>
+    <label>Streets count<input id="cfg-streets-count" type="number" min="0" max="300"></label>
+    <label>Street variation size<input id="cfg-street-variation" type="number" min="1" max="150"></label>
+    <label>Street fixed size<input id="cfg-street-fixed" type="number" min="1" max="60"></label>
+    <label>Open spaces count<input id="cfg-open-spaces-count" type="number" min="0" max="60"></label>
+    <label>Open space variation size<input id="cfg-open-space-variation" type="number" min="1" max="50"></label>
+    <label>Open space fixed size<input id="cfg-open-space-fixed" type="number" min="1" max="50"></label>
+    <label>Shot accuracy %<input id="cfg-shot-accuracy" type="number" min="0" max="100" step="1"></label>
+    <label>Panic level<input id="cfg-panic-level" type="number" min="0" max="20"></label>
+    <label>Update interval (ms)<input id="cfg-update-interval" type="number" min="10" max="2000"></label>
+    <label>Entities per batch<input id="cfg-entities-batch" type="number" min="1" max="500"></label>
+  </div>
+  <button id="apply-config">Apply &amp; Restart</button>
+</details>
 
 <div>
 
@@ -102,8 +133,63 @@ p, ul, li, a {
 <script>
 let game;
 
-window.addEventListener('load', (event) => {
-    game = new Game('game-canvas', 120, 120, 300);
+window.addEventListener('load', () => {
+    const cfg = {
+        'cfg-scale-factor':   () => Config.SCALE_FACTOR,
+        'cfg-shot-view':      () => Config.SHOT_VIEW_DISTANCE,
+        'cfg-near-look':      () => Config.NEAR_LOOK_DISTANCE,
+        'cfg-far-look':       () => Config.FAR_LOOK_DISTANCE,
+        'cfg-shoot-pistol':   () => Config.SHOOT_PISTOL_DISTANCE,
+        'cfg-entities':       () => Config.INITIAL_ENTITIES,
+        'cfg-min-policemen':  () => Config.MIN_POLICEMEN,
+        'cfg-max-police-pct':       () => Math.round(Config.MAX_POLICEMEN_PERCENTAGE * 100),
+        'cfg-streets-count':        () => Config.STREETS_COUNT,
+        'cfg-street-variation':     () => Config.STREET_VARIATION_SIZE,
+        'cfg-street-fixed':         () => Config.STREET_FIXED_SIZE,
+        'cfg-open-spaces-count':    () => Config.OPEN_SPACES_COUNT,
+        'cfg-open-space-variation': () => Config.OPEN_SPACE_VARIATION_SIZE,
+        'cfg-open-space-fixed':     () => Config.OPEN_SPACE_FIXED_SIZE,
+        'cfg-shot-accuracy':        () => Math.round(Config.POLICEMAN_SHOT_ACCURACY * 100),
+        'cfg-panic-level':          () => Config.PANIC_LEVEL,
+        'cfg-update-interval':      () => Config.UPDATE_INTERVAL_MS,
+        'cfg-entities-batch':       () => Config.ENTITIES_PER_BATCH,
+    };
+    for (const [id, getValue] of Object.entries(cfg)) {
+        document.getElementById(id).value = getValue();
+    }
+
+    game = new Game('game-canvas', 120, 120, Config.INITIAL_ENTITIES);
+
+    document.getElementById('apply-config').addEventListener('click', (event) => {
+        const intVal = (id, fallback) => { const v = parseInt(document.getElementById(id).value); return isNaN(v) ? fallback : v; };
+        Config.SCALE_FACTOR          = intVal('cfg-scale-factor',   Config.SCALE_FACTOR);
+        Config.SHOT_VIEW_DISTANCE    = intVal('cfg-shot-view',       Config.SHOT_VIEW_DISTANCE);
+        Config.NEAR_LOOK_DISTANCE    = intVal('cfg-near-look',       Config.NEAR_LOOK_DISTANCE);
+        Config.FAR_LOOK_DISTANCE     = intVal('cfg-far-look',        Config.FAR_LOOK_DISTANCE);
+        Config.SHOOT_PISTOL_DISTANCE = intVal('cfg-shoot-pistol',    Config.SHOOT_PISTOL_DISTANCE);
+        Config.INITIAL_ENTITIES      = intVal('cfg-entities',        Config.INITIAL_ENTITIES);
+        Config.MIN_POLICEMEN         = intVal('cfg-min-policemen',   Config.MIN_POLICEMEN);
+        const pct                    = intVal('cfg-max-police-pct',  Math.round(Config.MAX_POLICEMEN_PERCENTAGE * 100));
+        Config.MAX_POLICEMEN_PERCENTAGE = pct / 100;
+        Config.STREETS_COUNT             = intVal('cfg-streets-count',       Config.STREETS_COUNT);
+        Config.STREET_VARIATION_SIZE     = intVal('cfg-street-variation',     Config.STREET_VARIATION_SIZE);
+        Config.STREET_FIXED_SIZE         = intVal('cfg-street-fixed',         Config.STREET_FIXED_SIZE);
+        Config.OPEN_SPACES_COUNT         = intVal('cfg-open-spaces-count',    Config.OPEN_SPACES_COUNT);
+        Config.OPEN_SPACE_VARIATION_SIZE = intVal('cfg-open-space-variation', Config.OPEN_SPACE_VARIATION_SIZE);
+        Config.OPEN_SPACE_FIXED_SIZE     = intVal('cfg-open-space-fixed',     Config.OPEN_SPACE_FIXED_SIZE);
+        const acc                        = intVal('cfg-shot-accuracy',        Math.round(Config.POLICEMAN_SHOT_ACCURACY * 100));
+        Config.POLICEMAN_SHOT_ACCURACY   = acc / 100;
+        Config.PANIC_LEVEL               = intVal('cfg-panic-level',          Config.PANIC_LEVEL);
+        Config.UPDATE_INTERVAL_MS        = intVal('cfg-update-interval',      Config.UPDATE_INTERVAL_MS);
+        Config.ENTITIES_PER_BATCH        = intVal('cfg-entities-batch',       Config.ENTITIES_PER_BATCH);
+        game.destroy();
+        const oldCanvas = document.getElementById('game-canvas');
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = 'game-canvas';
+        oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+        game = new Game('game-canvas', 120, 120, Config.INITIAL_ENTITIES);
+        event.target.blur();
+    });
 });
 </script>
 
