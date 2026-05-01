@@ -14,7 +14,7 @@ const ENTITY_TYPES = {
 
 // World constants
 const WORLD_CONSTANTS = {
-  SCALE_FACTOR: 4,
+  SCALE_FACTOR: 6,
   ACTIVE_AMOUNT: 10,
 };
 
@@ -34,4 +34,3 @@ const DIRECTIONS = {
   SOUTH: 3,
   WEST: 4,
 };
-

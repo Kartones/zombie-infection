@@ -72,6 +72,17 @@ describe('World.humansAt()', () => {
     assert.equal(world.humansAt(3, 4), undefined);
   });
 
+  it('returns policeman at position', () => {
+    const world = makeWorld();
+    const policeman = { x: 3, y: 4, type: ctx.ENTITY_TYPES.POLICEMAN };
+    world.entities.push(policeman);
+
+    const result = world.humansAt(3, 4);
+
+    assert.ok(Array.isArray(result));
+    assert.equal(result[0], policeman);
+  });
+
   it('excludes HUMAN_PANIC entities at position', () => {
     const world = makeWorld();
     world.entities.push({ x: 3, y: 4, type: ctx.ENTITY_TYPES.HUMAN_PANIC });
@@ -239,13 +250,97 @@ describe('World._look()', () => {
     assert.equal(result, ctx.ENTITY_TYPES.HUMAN_PANIC);
   });
 
-  it('returns NONE when POLICEMAN is in path', () => {
+  it('returns POLICEMAN when it finds a policeman cell', () => {
     const world = makeWorld();
     world.worldState[7][5] = ctx.ENTITY_TYPES.POLICEMAN;
 
     const result = world._look(5, 8, ctx.DIRECTIONS.NORTH, 5);
 
-    assert.equal(result, ctx.ENTITY_TYPES.NONE);
+    assert.equal(result, ctx.ENTITY_TYPES.POLICEMAN);
+  });
+});
+
+// --- World.getStats() ---
+
+describe('World.getStats()', () => {
+  it('returns zero counts when no entities', () => {
+    const world = makeWorld();
+
+    const stats = world.getStats();
+
+    assert.equal(stats.humans, 0);
+    assert.equal(stats.panicked, 0);
+    assert.equal(stats.policemen, 0);
+    assert.equal(stats.panickedPolicemen, 0);
+    assert.equal(stats.zombies, 0);
+  });
+
+  it('counts calm HUMAN (activityLevel 0) as humans', () => {
+    const world = makeWorld();
+    world.entities.push({ type: ctx.ENTITY_TYPES.HUMAN, activityLevel: 0 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.HUMAN, activityLevel: 3 });
+
+    const { humans } = world.getStats();
+
+    assert.equal(humans, 1);
+  });
+
+  it('counts panicking HUMAN (activityLevel > 0) as panicked', () => {
+    const world = makeWorld();
+    world.entities.push({ type: ctx.ENTITY_TYPES.HUMAN, activityLevel: 0 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.HUMAN, activityLevel: 3 });
+
+    const { panicked } = world.getStats();
+
+    assert.equal(panicked, 1);
+  });
+
+  it('counts calm POLICEMAN as policemen', () => {
+    const world = makeWorld();
+    world.entities.push({ type: ctx.ENTITY_TYPES.POLICEMAN, activityLevel: 0 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.POLICEMAN, activityLevel: 0 });
+
+    const { policemen } = world.getStats();
+
+    assert.equal(policemen, 2);
+  });
+
+  it('counts panicking POLICEMAN as panickedPolicemen', () => {
+    const world = makeWorld();
+    world.entities.push({ type: ctx.ENTITY_TYPES.POLICEMAN, activityLevel: 0 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.POLICEMAN, activityLevel: 3 });
+
+    const stats = world.getStats();
+
+    assert.equal(stats.policemen, 1);
+    assert.equal(stats.panickedPolicemen, 1);
+  });
+
+  it('counts ZOMBIE entities', () => {
+    const world = makeWorld();
+    world.entities.push({ type: ctx.ENTITY_TYPES.ZOMBIE });
+
+    const { zombies } = world.getStats();
+
+    assert.equal(zombies, 1);
+  });
+
+  it('returns correct counts for a mixed entity list', () => {
+    const world = makeWorld();
+    world.entities.push({ type: ctx.ENTITY_TYPES.HUMAN, activityLevel: 0 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.HUMAN, activityLevel: 3 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.POLICEMAN, activityLevel: 0 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.POLICEMAN, activityLevel: 2 });
+    world.entities.push({ type: ctx.ENTITY_TYPES.ZOMBIE });
+    world.entities.push({ type: ctx.ENTITY_TYPES.ZOMBIE });
+
+    const stats = world.getStats();
+
+    assert.equal(stats.humans, 1);
+    assert.equal(stats.panicked, 1);
+    assert.equal(stats.policemen, 1);
+    assert.equal(stats.panickedPolicemen, 1);
+    assert.equal(stats.zombies, 2);
   });
 });
 

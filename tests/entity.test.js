@@ -278,6 +278,36 @@ describe('Entity._moveZombie()', () => {
 
     assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
   });
+
+  it('bites policeman when one is in near sight', () => {
+    const victim = makeEntity(makeMockWorld());
+    victim.type = ctx.ENTITY_TYPES.POLICEMAN;
+
+    const world = makeMockWorld({
+      nearLook() { return ctx.ENTITY_TYPES.POLICEMAN; },
+      humansAt() { return [victim]; },
+    });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    entity.direction = ctx.DIRECTIONS.EAST;
+
+    entity._moveZombie();
+
+    assert.equal(victim.type, ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('sets activityLevel when POLICEMAN is in far sight', () => {
+    const world = makeMockWorld({
+      farLook() { return ctx.ENTITY_TYPES.POLICEMAN; },
+    });
+    const entity = makeEntity(world);
+    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    entity.activityLevel = 0;
+
+    entity._moveZombie();
+
+    assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT);
+  });
 });
 
 // --- Entity._shouldMove() ---

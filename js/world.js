@@ -58,6 +58,20 @@ class World {
     }
   }
 
+  getStats() {
+    let humans = 0, panicked = 0, policemen = 0, panickedPolicemen = 0, zombies = 0;
+    for (const entity of this.entities) {
+      if (entity.type === ENTITY_TYPES.ZOMBIE) zombies++;
+      else if (entity.type === ENTITY_TYPES.POLICEMAN) {
+        if (entity.activityLevel > 0) panickedPolicemen++;
+        else policemen++;
+      }
+      else if (entity.activityLevel > 0) panicked++;
+      else humans++;
+    }
+    return { humans, panicked, policemen, panickedPolicemen, zombies };
+  }
+
   getEntityType(x, y) {
     return this.worldState[y][x];
   }
@@ -77,7 +91,7 @@ class World {
   humansAt(x, y) {
     let matches = this.entities
       .filter((entity) => entity.x === x && entity.y === y)
-      .filter((entity) => entity.type === ENTITY_TYPES.HUMAN);
+      .filter((entity) => entity.type === ENTITY_TYPES.HUMAN || entity.type === ENTITY_TYPES.POLICEMAN);
     return matches.length > 0 ? matches : undefined;
   }
 
@@ -218,6 +232,8 @@ class World {
           return ENTITY_TYPES.HUMAN;
         } else if (entityType === ENTITY_TYPES.ZOMBIE) {
           return ENTITY_TYPES.ZOMBIE;
+        } else if (entityType === ENTITY_TYPES.POLICEMAN) {
+          return ENTITY_TYPES.POLICEMAN;
         }
       }
     }

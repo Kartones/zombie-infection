@@ -5,7 +5,7 @@ class Game {
     this.soundSystem = new SoundSystem();
     this.renderer = new Renderer(canvasNodeId, mapWidth, mapHeight);
     this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, numEntities, this.soundSystem);
-    this.renderer.renderWorld(this.world.worldState);
+    this.renderer.render(this.world.worldState, this.world.entities);
 
     this.paused = true;
     this.speed = 1;
@@ -16,6 +16,9 @@ class Game {
     document
       .getElementById("game-canvas")
       .addEventListener("click", this._pauseOrUnpause.bind(this));
+
+    this._updateStats();
+    setInterval(this._updateStats.bind(this), 1000);
   }
 
   _update() {
@@ -24,7 +27,7 @@ class Game {
     }
 
     this.world.entities.forEach((entity) => entity.move());
-    this.renderer.renderWorld(this.world.worldState);
+    this.renderer.render(this.world.worldState, this.world.entities);
     this.updateId = setTimeout(
       this._update.bind(this),
       Config.UPDATE_INTERVAL_MS * this.speed
@@ -81,7 +84,17 @@ class Game {
     this.world.upgradeHumansToPolicemen();
     // "patient zero" will be the first entity
     this.world.entities[0].infect();
-    this.renderer.renderWorld(this.world.worldState);
+    this.renderer.render(this.world.worldState, this.world.entities);
+    this._updateStats();
+  }
+
+  _updateStats() {
+    const { humans, panicked, policemen, panickedPolicemen, zombies } = this.world.getStats();
+    document.getElementById('stat-humans').textContent = humans;
+    document.getElementById('stat-panicked').textContent = panicked;
+    document.getElementById('stat-policemen').textContent = policemen;
+    document.getElementById('stat-panicked-policemen').textContent = panickedPolicemen;
+    document.getElementById('stat-zombies').textContent = zombies;
   }
 
   _keydown(event) {

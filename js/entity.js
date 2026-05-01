@@ -102,7 +102,7 @@ class Entity {
   _moveZombie() {
     const target = this.world.farLook(this.x, this.y, this.direction);
 
-    if (target === ENTITY_TYPES.HUMAN || target === ENTITY_TYPES.HUMAN_PANIC) {
+    if (target === ENTITY_TYPES.HUMAN || target === ENTITY_TYPES.HUMAN_PANIC || target === ENTITY_TYPES.POLICEMAN) {
       this.activityLevel = WORLD_CONSTANTS.ACTIVE_AMOUNT;
     }
 
@@ -111,7 +111,7 @@ class Entity {
     }
 
     const victim = this.world.nearLook(this.x, this.y, this.direction);
-    if (victim === ENTITY_TYPES.HUMAN || victim === ENTITY_TYPES.HUMAN_PANIC) {
+    if (victim === ENTITY_TYPES.HUMAN || victim === ENTITY_TYPES.HUMAN_PANIC || victim === ENTITY_TYPES.POLICEMAN) {
       let dx = this.x;
       let dy = this.y;
 
