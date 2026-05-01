@@ -10,6 +10,10 @@ class World {
 
     this._initializeWorldState();
     this._addWalls();
+    for (let i = 0; i < TOP_PADDING_ROWS; i++) {
+      this.worldState.unshift(new Array(this.width).fill(ENTITY_TYPES.WALL));
+    }
+    this.height += TOP_PADDING_ROWS;
 
     let amountEntities = Math.min(this.width * this.height - 2, numEntities);
 

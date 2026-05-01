@@ -3,8 +3,8 @@
 class Game {
   constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
     this.soundSystem = new SoundSystem();
-    this.renderer = new Renderer(canvasNodeId, mapWidth, mapHeight);
     this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, numEntities, this.soundSystem);
+    this.renderer = new Renderer(canvasNodeId, this.world.width, this.world.height);
     this.renderer.render(this.world.worldState, this.world.entities);
 
     this.paused = true;

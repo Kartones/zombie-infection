@@ -28,3 +28,8 @@ const DIRECTIONS = {
   SOUTH: 3,
   WEST: 4,
 };
+
+// natural sprite height in pixels (sprites are currently 1×3 px)
+const SPRITE_HEIGHT = 3;
+// Draw extra rows at the top to ensure that sprites are always fully rendered when on the top edge of the map.
+const TOP_PADDING_ROWS = SPRITE_HEIGHT - 1;

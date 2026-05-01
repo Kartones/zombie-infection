@@ -16,8 +16,6 @@ const SPRITE_PATHS = [
   'gfx/police_panic.png',
 ];
 
-const SPRITE_HEIGHT = 3; // natural sprite height in pixels (sprites are 1×3 px)
-
 class Renderer {
   constructor(canvasNodeId, mapWidth, mapHeight) {
     this._width  = Math.max(2, mapWidth  || 0);
