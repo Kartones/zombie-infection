@@ -226,8 +226,8 @@ class World {
         const entityType = this.getEntityType(x, y);
         if (entityType === ENTITY_TYPES.WALL) {
           return ENTITY_TYPES.WALL;
-        } else if (entityType === ENTITY_TYPES.HUMAN_PANIC) {
-          return ENTITY_TYPES.HUMAN_PANIC;
+        } else if (entityType === ENTITY_STATES.PANICKING) {
+          return ENTITY_STATES.PANICKING;
         } else if (entityType === ENTITY_TYPES.HUMAN) {
           return ENTITY_TYPES.HUMAN;
         } else if (entityType === ENTITY_TYPES.ZOMBIE) {

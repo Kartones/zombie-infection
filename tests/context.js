@@ -12,7 +12,7 @@ const FILE_EXPORTS = {
   'config.js': ['Config', 'GAME_CONSTANTS'],
   'random.js': ['random'],
   'constants.js': [
-    'ENTITY_TYPES', 'WORLD_CONSTANTS', 'ENTITY_CONSTANTS', 'DIRECTIONS',
+    'ENTITY_TYPES', 'ENTITY_STATES', 'WORLD_CONSTANTS', 'ENTITY_CONSTANTS', 'DIRECTIONS',
   ],
   'entity.js': ['Entity'],
   'world.js': ['World'],

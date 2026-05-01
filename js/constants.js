@@ -7,9 +7,13 @@ const ENTITY_TYPES = {
   NONE: 0,
   ZOMBIE: 1,
   HUMAN: 2,
-  HUMAN_PANIC: 3,
   WALL: 4,
   POLICEMAN: 5,
+};
+
+// Entity states (orthogonal to type)
+const ENTITY_STATES = {
+  PANICKING: 3,
 };
 
 // World constants

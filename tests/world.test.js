@@ -83,12 +83,6 @@ describe('World.humansAt()', () => {
     assert.equal(result[0], policeman);
   });
 
-  it('excludes HUMAN_PANIC entities at position', () => {
-    const world = makeWorld();
-    world.entities.push({ x: 3, y: 4, type: ctx.ENTITY_TYPES.HUMAN_PANIC });
-
-    assert.equal(world.humansAt(3, 4), undefined);
-  });
 });
 
 // --- World.removeZombieAt() ---
@@ -241,13 +235,13 @@ describe('World._look()', () => {
     assert.equal(result, ctx.ENTITY_TYPES.ZOMBIE);
   });
 
-  it('returns HUMAN_PANIC when it finds a HUMAN_PANIC cell', () => {
+  it('returns PANICKING when it finds a panicking cell', () => {
     const world = makeWorld();
-    world.worldState[4][5] = ctx.ENTITY_TYPES.HUMAN_PANIC;
+    world.worldState[4][5] = ctx.ENTITY_STATES.PANICKING;
 
     const result = world._look(5, 5, ctx.DIRECTIONS.NORTH, 5);
 
-    assert.equal(result, ctx.ENTITY_TYPES.HUMAN_PANIC);
+    assert.equal(result, ctx.ENTITY_STATES.PANICKING);
   });
 
   it('returns POLICEMAN when it finds a policeman cell', () => {
