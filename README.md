@@ -5,7 +5,13 @@
 
 A simple yet entertaining zombie simulator. A single infected/zombie appears at a randomly generated city, just watch how it bites and transforms other humans into more zombies. Normal people get scared and flee, meanwhile policemen might fight back and shoot at the undead.
 
+
+Old version without sprites:
 ![Zombie Infection Simulator sample capture](doc/zombie_infection_sample.gif)
+
+Newer sprite-based version:
+![Zombie Infection Simulator sprite version screenshot](doc/sprites_screenshot.png)
+
 
 Can play it online at [https://kartones.net/demos/026/](https://kartones.net/demos/026/).
 
