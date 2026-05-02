@@ -87,6 +87,8 @@ summary { color: lightgreen; cursor: pointer; font-size: 16px; }
     <label>Panic level<input id="cfg-panic-level" type="number" min="0" max="20"></label>
     <label>Update interval (ms)<input id="cfg-update-interval" type="number" min="10" max="2000"></label>
     <label>Entities per batch<input id="cfg-entities-batch" type="number" min="1" max="500"></label>
+    <label>Human stamina<input id="cfg-human-stamina" type="number" min="1" max="50"></label>
+    <label>Policeman stamina<input id="cfg-policeman-stamina" type="number" min="1" max="50"></label>
   </div>
   <button id="apply-config">Apply &amp; Restart</button>
 </details>
@@ -153,6 +155,8 @@ window.addEventListener('load', () => {
         'cfg-panic-level':          () => Config.PANIC_LEVEL,
         'cfg-update-interval':      () => Config.UPDATE_INTERVAL_MS,
         'cfg-entities-batch':       () => Config.ENTITIES_PER_BATCH,
+        'cfg-human-stamina':        () => Config.HUMAN_STAMINA,
+        'cfg-policeman-stamina':    () => Config.POLICEMAN_STAMINA,
     };
     for (const [id, getValue] of Object.entries(cfg)) {
         document.getElementById(id).value = getValue();
@@ -182,6 +186,8 @@ window.addEventListener('load', () => {
         Config.PANIC_LEVEL               = intVal('cfg-panic-level',          Config.PANIC_LEVEL);
         Config.UPDATE_INTERVAL_MS        = intVal('cfg-update-interval',      Config.UPDATE_INTERVAL_MS);
         Config.ENTITIES_PER_BATCH        = intVal('cfg-entities-batch',       Config.ENTITIES_PER_BATCH);
+        Config.HUMAN_STAMINA             = intVal('cfg-human-stamina',        Config.HUMAN_STAMINA);
+        Config.POLICEMAN_STAMINA         = intVal('cfg-policeman-stamina',    Config.POLICEMAN_STAMINA);
         game.destroy();
         const oldCanvas = document.getElementById('game-canvas');
         const newCanvas = document.createElement('canvas');

@@ -9,6 +9,8 @@ class Entity {
     this.direction = this._randomDirection();
     this.type = ENTITY_TYPES.HUMAN;
     this.activityLevel = 0;
+    this.stamina = Config.HUMAN_STAMINA;
+    this.isResting = false;
   }
 
   get isPanicking() {
@@ -45,12 +47,24 @@ class Entity {
   reset() {
     this.type = ENTITY_TYPES.HUMAN;
     this.activityLevel = 0;
+    this.stamina = Config.HUMAN_STAMINA;
+    this.isResting = false;
 
     this.world.setState(this.x, this.y, ENTITY_TYPES.NONE);
     this.setPosition();
   }
 
   move() {
+    if (this.isResting) {
+      this.stamina++;
+      const maxStamina = this.type === ENTITY_TYPES.POLICEMAN ? Config.POLICEMAN_STAMINA : Config.HUMAN_STAMINA;
+      if (this.stamina === maxStamina) {
+        this.isResting = false;
+      }
+      this.render();
+      return;
+    }
+
     const rand = Math.floor(random() * GAME_CONSTANTS.MOVEMENT_RANDOM_FACTOR);
 
     if (this._shouldMove(rand)) {
@@ -97,6 +111,16 @@ class Entity {
     }
 
     this.render();
+
+    if (this.type !== ENTITY_TYPES.ZOMBIE && this.activityLevel > 0) {
+      this.stamina--;
+      if (this.stamina <= 0) {
+        this.stamina = 0;
+        this.activityLevel = 0;
+        this.isResting = true;
+        return;
+      }
+    }
 
     if (this.activityLevel > 0) {
       this.activityLevel--;
