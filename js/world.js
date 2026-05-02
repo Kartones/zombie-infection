@@ -57,6 +57,7 @@ class World {
         count++
       ) {
         availableHumans[count].type = ENTITY_TYPES.POLICEMAN;
+        availableHumans[count].stamina = Config.POLICEMAN_STAMINA;
         availableHumans[count].render();
       }
     }

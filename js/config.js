@@ -10,6 +10,9 @@ class Config {
   static OPEN_SPACE_VARIATION_SIZE = 10;
   static OPEN_SPACE_FIXED_SIZE = 10;
 
+  static HUMAN_STAMINA = 8;
+  static POLICEMAN_STAMINA = 10;
+
   static POLICEMAN_SHOT_ACCURACY = 0.7;
   static MIN_POLICEMEN = 2;
   static MAX_POLICEMEN_PERCENTAGE = 0.05;
