@@ -35,21 +35,77 @@ function makeMockWorld(overrides = {}) {
   return world;
 }
 
-function makeEntity(world) {
+function makeEntity(world, type) {
   const entity = new ctx.Entity(world);
   entity.x = 3;
   entity.y = 3;
   entity.activityLevel = 0;
+  if (type !== undefined) entity.type = type;
   return entity;
 }
 
-// --- Entity.infect() ---
+describe('Entity.isPanicking', () => {
+  it('returns true when activityLevel > 0', () => {
+    const entity = makeEntity(makeMockWorld());
+    entity.activityLevel = 3;
+
+    assert.equal(entity.isPanicking, true);
+  });
+
+  it('returns false when activityLevel === 0', () => {
+    const entity = makeEntity(makeMockWorld());
+    entity.activityLevel = 0;
+
+    assert.equal(entity.isPanicking, false);
+  });
+});
+
+describe('Entity.setPosition()', () => {
+  it('updates coordinates and calls setState when first position is empty', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world);
+
+    // random() → 0.5 → Math.floor(0.5 * 10) = 5
+    const mockRandom = mock.method(Math, 'random', () => 0.5);
+    try {
+      entity.setPosition();
+      assert.equal(entity.x, 5);
+      assert.equal(entity.y, 5);
+      assert.ok(
+        world.setCellCalls.some(c => c.x === 5 && c.y === 5),
+        'setState should be called for the new position'
+      );
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
+
+  it('retries until it finds an empty cell', () => {
+    // First two random calls land on (3,3) which is occupied; third lands on (5,5) which is free.
+    const randomValues = [0.3, 0.3, 0.3, 0.3, 0.5, 0.5];
+    let callCount = 0;
+    const world = makeMockWorld({
+      getEntityType(x, y) {
+        return (x === 3 && y === 3) ? ctx.ENTITY_TYPES.HUMAN : ctx.ENTITY_TYPES.NONE;
+      },
+    });
+    const entity = makeEntity(world);
+
+    const mockRandom = mock.method(Math, 'random', () => randomValues[callCount++] ?? 0.5);
+    try {
+      entity.setPosition();
+      assert.equal(entity.x, 5);
+      assert.equal(entity.y, 5);
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
+});
 
 describe('Entity.infect()', () => {
   it('changes type to ZOMBIE', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
 
     entity.infect();
 
@@ -58,8 +114,7 @@ describe('Entity.infect()', () => {
 
   it('calls render() after infecting (setCell invoked)', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
 
     entity.infect();
 
@@ -71,18 +126,12 @@ describe('Entity.infect()', () => {
   });
 });
 
-// --- Entity.bite() ---
-
 describe('Entity.bite()', () => {
   it('infects each human in the list', () => {
     const world = makeMockWorld();
-    const biter = makeEntity(world);
-    biter.type = ctx.ENTITY_TYPES.ZOMBIE;
-
-    const victim1 = makeEntity(world);
-    victim1.type = ctx.ENTITY_TYPES.HUMAN;
-    const victim2 = makeEntity(world);
-    victim2.type = ctx.ENTITY_TYPES.HUMAN;
+    const biter = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
+    const victim1 = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
+    const victim2 = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
 
     biter.bite([victim1, victim2]);
 
@@ -99,15 +148,37 @@ describe('Entity.bite()', () => {
 
     assert.equal(world.setCellCalls.length, callsBefore);
   });
-});
 
-// --- Entity.reset() ---
+  it('invokes playBite() on soundSystem when victims list is non-empty', () => {
+    let playBiteCalled = false;
+    const world = makeMockWorld({
+      soundSystem: { playBite() { playBiteCalled = true; }, playShot() {} },
+    });
+    const biter = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
+    const victim = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
+
+    biter.bite([victim]);
+
+    assert.equal(playBiteCalled, true, 'playBite() should be called when biting victims');
+  });
+
+  it('does NOT invoke playBite() when victims list is empty', () => {
+    let playBiteCalled = false;
+    const world = makeMockWorld({
+      soundSystem: { playBite() { playBiteCalled = true; }, playShot() {} },
+    });
+    const biter = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
+
+    biter.bite([]);
+
+    assert.equal(playBiteCalled, false, 'playBite() should NOT be called for an empty list');
+  });
+});
 
 describe('Entity.reset()', () => {
   it('sets type to HUMAN', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
 
     entity.reset();
 
@@ -116,8 +187,7 @@ describe('Entity.reset()', () => {
 
   it('resets activityLevel to 0', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.activityLevel = 5;
 
     entity.reset();
@@ -127,10 +197,9 @@ describe('Entity.reset()', () => {
 
   it('clears the old cell via setCell with NONE', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.x = 2;
     entity.y = 4;
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
     world.worldState[4][2] = ctx.ENTITY_TYPES.ZOMBIE;
 
     entity.reset();
@@ -141,33 +210,26 @@ describe('Entity.reset()', () => {
     assert.ok(clearCall, 'old cell should be cleared with NONE');
   });
 
-  it('repositions the entity by calling setPosition', () => {
+  it('calls setPosition() exactly once', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.x = 2;
     entity.y = 4;
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
 
-    const mockRandom = mock.method(Math, 'random', () => 0.1);
+    const mockSetPosition = mock.method(entity, 'setPosition', () => {});
     try {
       entity.reset();
-      assert.ok(
-        entity.x !== 2 || entity.y !== 4,
-        'entity position should change after reset'
-      );
+      assert.equal(mockSetPosition.mock.calls.length, 1, 'setPosition() should be called exactly once');
     } finally {
-      mockRandom.mock.restore();
+      mockSetPosition.mock.restore();
     }
   });
 });
 
-// --- Entity.render() ---
-
 describe('Entity.render()', () => {
   it('draws ZOMBIE when type is ZOMBIE', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
 
     entity.render();
 
@@ -177,9 +239,7 @@ describe('Entity.render()', () => {
 
   it('draws POLICEMAN when type is POLICEMAN', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.POLICEMAN;
-    entity.activityLevel = 0;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
 
     entity.render();
 
@@ -187,10 +247,20 @@ describe('Entity.render()', () => {
     assert.equal(last.type, ctx.ENTITY_TYPES.POLICEMAN);
   });
 
+  it('draws PANICKING when type is POLICEMAN and activityLevel > 0', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
+    entity.activityLevel = 3;
+
+    entity.render();
+
+    const last = world.setCellCalls.at(-1);
+    assert.equal(last.type, ctx.ENTITY_STATES.PANICKING);
+  });
+
   it('sets PANICKING state when human with activityLevel > 0', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 3;
 
     entity.render();
@@ -201,8 +271,7 @@ describe('Entity.render()', () => {
 
   it('draws HUMAN when human with activityLevel === 0', () => {
     const world = makeMockWorld();
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 0;
 
     entity.render();
@@ -212,15 +281,12 @@ describe('Entity.render()', () => {
   });
 });
 
-// --- Entity._moveZombie() ---
-
 describe('Entity._moveZombie()', () => {
   it('sets activityLevel when human is in far sight', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_TYPES.HUMAN; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.activityLevel = 0;
 
     entity._moveZombie();
@@ -236,8 +302,7 @@ describe('Entity._moveZombie()', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_TYPES.NONE; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.activityLevel = 0;
     entity.direction = ctx.DIRECTIONS.EAST;
 
@@ -250,15 +315,13 @@ describe('Entity._moveZombie()', () => {
   });
 
   it('bites humans when one is in near sight', () => {
-    const victim = makeEntity(makeMockWorld());
-    victim.type = ctx.ENTITY_TYPES.HUMAN;
+    const victim = makeEntity(makeMockWorld(), ctx.ENTITY_TYPES.HUMAN);
 
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.HUMAN; },
       humansAt() { return [victim]; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.direction = ctx.DIRECTIONS.EAST;
 
     entity._moveZombie();
@@ -267,15 +330,13 @@ describe('Entity._moveZombie()', () => {
   });
 
   it('bites policeman when one is in near sight', () => {
-    const victim = makeEntity(makeMockWorld());
-    victim.type = ctx.ENTITY_TYPES.POLICEMAN;
+    const victim = makeEntity(makeMockWorld(), ctx.ENTITY_TYPES.POLICEMAN);
 
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.POLICEMAN; },
       humansAt() { return [victim]; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.direction = ctx.DIRECTIONS.EAST;
 
     entity._moveZombie();
@@ -287,8 +348,7 @@ describe('Entity._moveZombie()', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_TYPES.POLICEMAN; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
     entity.activityLevel = 0;
 
     entity._moveZombie();
@@ -297,26 +357,21 @@ describe('Entity._moveZombie()', () => {
   });
 });
 
-// --- Entity._shouldMove() ---
-
 describe('Entity._shouldMove()', () => {
   it('returns true for zombie when rand equals ZOMBIE_MOVE_CHANCE', () => {
-    const entity = makeEntity(makeMockWorld());
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(makeMockWorld(), ctx.ENTITY_TYPES.ZOMBIE);
 
     assert.equal(entity._shouldMove(ctx.GAME_CONSTANTS.ZOMBIE_MOVE_CHANCE), true);
   });
 
   it('returns false for zombie when rand does not equal ZOMBIE_MOVE_CHANCE', () => {
-    const entity = makeEntity(makeMockWorld());
-    entity.type = ctx.ENTITY_TYPES.ZOMBIE;
+    const entity = makeEntity(makeMockWorld(), ctx.ENTITY_TYPES.ZOMBIE);
 
     assert.equal(entity._shouldMove(ctx.GAME_CONSTANTS.ZOMBIE_MOVE_CHANCE + 1), false);
   });
 
   it('returns true for human when activityLevel > 0', () => {
-    const entity = makeEntity(makeMockWorld());
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(makeMockWorld(), ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 3;
 
     assert.equal(entity._shouldMove(0), true);
@@ -324,8 +379,7 @@ describe('Entity._shouldMove()', () => {
 
   it('returns true for human when rand > panicThreshold and activityLevel is 0', () => {
     const world = makeMockWorld({ panicThreshold: 5 });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 0;
 
     assert.equal(entity._shouldMove(6), true);
@@ -333,15 +387,12 @@ describe('Entity._shouldMove()', () => {
 
   it('returns false for human when rand <= panicThreshold and activityLevel is 0', () => {
     const world = makeMockWorld({ panicThreshold: 5 });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 0;
 
     assert.equal(entity._shouldMove(5), false);
   });
 });
-
-// --- Entity._executeMove() ---
 
 describe('Entity._executeMove()', () => {
   it('decrements y when moving NORTH into empty cell', () => {
@@ -417,8 +468,6 @@ describe('Entity._executeMove()', () => {
   });
 });
 
-// --- Entity._movePoliceman() ---
-
 describe('Entity._movePoliceman()', () => {
   it('shoots when exactly one zombie in sight and accuracy permits', () => {
     let removeZombieCalled = false;
@@ -427,8 +476,7 @@ describe('Entity._movePoliceman()', () => {
       removeZombieAt() { removeZombieCalled = true; },
       getEntityType() { return ctx.ENTITY_TYPES.ZOMBIE; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.POLICEMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
     entity.direction = ctx.DIRECTIONS.EAST;
 
     const mockRandom = mock.method(Math, 'random', () => 0.0); // always hits
@@ -445,8 +493,7 @@ describe('Entity._movePoliceman()', () => {
     const world = makeMockWorld({
       zombiesInDirection() { return 3; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.POLICEMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
     entity.direction = ctx.DIRECTIONS.NORTH; // 1 → should become SOUTH (3)
 
     const mockRandom = mock.method(Math, 'random', () => 0.5); // > 1/8, no random direction
@@ -458,17 +505,54 @@ describe('Entity._movePoliceman()', () => {
       mockRandom.mock.restore();
     }
   });
-});
 
-// --- Entity._moveHuman() ---
+  it('does not change activityLevel or call removeZombieAt when zero zombies in direction', () => {
+    let removeZombieCalled = false;
+    const world = makeMockWorld({
+      zombiesInDirection() { return 0; },
+      removeZombieAt() { removeZombieCalled = true; },
+    });
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
+    entity.activityLevel = 0;
+
+    // random() = 0.9 → Math.floor(0.9 * 8) = 7 ≠ 1, so no direction randomization
+    const mockRandom = mock.method(Math, 'random', () => 0.9);
+    try {
+      entity._movePoliceman();
+      assert.equal(entity.activityLevel, 0, 'activityLevel should remain 0 with no zombies in sight');
+      assert.equal(removeZombieCalled, false, 'removeZombieAt should not be called');
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
+
+  it('does not call removeZombieAt when one zombie in direction but shot misses (random >= POLICEMAN_SHOT_ACCURACY)', () => {
+    let removeZombieCalled = false;
+    const world = makeMockWorld({
+      zombiesInDirection() { return 1; },
+      removeZombieAt() { removeZombieCalled = true; },
+    });
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
+
+    // random() = 0.9 >= POLICEMAN_SHOT_ACCURACY (0.7) → condition `random() < 0.7` is false → no shot
+    // Math.floor(0.9 * 8) = 7 ≠ 1, so no direction randomization either
+    const mockRandom = mock.method(Math, 'random', () => 0.9);
+    try {
+      entity._movePoliceman();
+      assert.equal(removeZombieCalled, false, 'removeZombieAt should NOT be called when shot misses');
+      assert.equal(entity.activityLevel, ctx.WORLD_CONSTANTS.ACTIVE_AMOUNT, 'activityLevel should still be raised');
+    } finally {
+      mockRandom.mock.restore();
+    }
+  });
+});
 
 describe('Entity._moveHuman()', () => {
   it('sets activityLevel when zombie is in far sight', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_TYPES.ZOMBIE; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 0;
 
     entity._moveHuman();
@@ -480,8 +564,7 @@ describe('Entity._moveHuman()', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_TYPES.ZOMBIE; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.direction = ctx.DIRECTIONS.NORTH; // 1 → SOUTH (3)
 
     const mockRandom = mock.method(Math, 'random', () => 0.5); // > 1/8
@@ -497,8 +580,7 @@ describe('Entity._moveHuman()', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_STATES.PANICKING; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.activityLevel = 0;
 
     entity._moveHuman();
@@ -510,8 +592,7 @@ describe('Entity._moveHuman()', () => {
     const world = makeMockWorld({
       farLook() { return ctx.ENTITY_STATES.PANICKING; },
     });
-    const entity = makeEntity(world);
-    entity.type = ctx.ENTITY_TYPES.HUMAN;
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
     entity.direction = ctx.DIRECTIONS.NORTH;
 
     const mockRandom = mock.method(Math, 'random', () => 0.5);
@@ -523,8 +604,6 @@ describe('Entity._moveHuman()', () => {
     }
   });
 });
-
-// --- Entity._shootZombie() ---
 
 describe('Entity._shootZombie()', () => {
   it('removes zombie within pistol range', () => {
@@ -587,5 +666,116 @@ describe('Entity._shootZombie()', () => {
     entity._shootZombie(ctx.ENTITY_TYPES.HUMAN);
 
     assert.equal(removeZombieCalled, false);
+  });
+
+  it('invokes playShot() on soundSystem when zombie is hit', () => {
+    let playShotCalled = false;
+    const world = makeMockWorld({
+      // entity at (5,5) facing NORTH; SHOOT_PISTOL_DISTANCE=2 → first step checks (5,4)
+      getEntityType(x, y) {
+        return (x === 5 && y === 4) ? ctx.ENTITY_TYPES.ZOMBIE : ctx.ENTITY_TYPES.NONE;
+      },
+      soundSystem: { playBite() {}, playShot() { playShotCalled = true; } },
+    });
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
+    entity.x = 5;
+    entity.y = 5;
+    entity.direction = ctx.DIRECTIONS.NORTH;
+
+    entity._shootZombie(ctx.ENTITY_TYPES.POLICEMAN);
+
+    assert.equal(playShotCalled, true, 'playShot() should be called when a zombie is hit');
+  });
+
+  it('removes only the first (closest) zombie when multiple zombies are in the path', () => {
+    const removeZombieCalls = [];
+    const world = makeMockWorld({
+      // entity at (5,5) facing NORTH; SHOOT_PISTOL_DISTANCE=2 → checks (5,4) then (5,3)
+      getEntityType(x, y) {
+        return (x === 5 && (y === 4 || y === 3)) ? ctx.ENTITY_TYPES.ZOMBIE : ctx.ENTITY_TYPES.NONE;
+      },
+      removeZombieAt(x, y) { removeZombieCalls.push({ x, y }); },
+    });
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
+    entity.x = 5;
+    entity.y = 5;
+    entity.direction = ctx.DIRECTIONS.NORTH;
+
+    entity._shootZombie(ctx.ENTITY_TYPES.POLICEMAN);
+
+    assert.equal(removeZombieCalls.length, 1, 'only one zombie should be removed');
+    assert.deepEqual(removeZombieCalls[0], { x: 5, y: 4 }, 'the closest zombie should be removed');
+  });
+});
+
+describe('Entity.move() — dispatch', () => {
+  it('invokes _moveZombie() when type is ZOMBIE', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.ZOMBIE);
+    entity.isResting = false;
+
+    let called = false;
+    const mockShouldMove = mock.method(entity, '_shouldMove', () => false);
+    const mockMoveZombie = mock.method(entity, '_moveZombie', () => { called = true; });
+    try {
+      entity.move();
+      assert.ok(called, '_moveZombie should be invoked for ZOMBIE type');
+    } finally {
+      mockShouldMove.mock.restore();
+      mockMoveZombie.mock.restore();
+    }
+  });
+
+  it('invokes _movePoliceman() when type is POLICEMAN', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.POLICEMAN);
+    entity.isResting = false;
+
+    let called = false;
+    const mockShouldMove = mock.method(entity, '_shouldMove', () => false);
+    const mockMovePoliceman = mock.method(entity, '_movePoliceman', () => { called = true; });
+    try {
+      entity.move();
+      assert.ok(called, '_movePoliceman should be invoked for POLICEMAN type');
+    } finally {
+      mockShouldMove.mock.restore();
+      mockMovePoliceman.mock.restore();
+    }
+  });
+
+  it('invokes _moveHuman() when type is HUMAN', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
+    entity.isResting = false;
+
+    let called = false;
+    const mockShouldMove = mock.method(entity, '_shouldMove', () => false);
+    const mockMoveHuman = mock.method(entity, '_moveHuman', () => { called = true; });
+    try {
+      entity.move();
+      assert.ok(called, '_moveHuman should be invoked for HUMAN type');
+    } finally {
+      mockShouldMove.mock.restore();
+      mockMoveHuman.mock.restore();
+    }
+  });
+
+  it('does not invoke _executeMove() when _shouldMove returns false', () => {
+    const world = makeMockWorld();
+    const entity = makeEntity(world, ctx.ENTITY_TYPES.HUMAN);
+    entity.isResting = false;
+
+    let executeMoveWasCalled = false;
+    const mockShouldMove = mock.method(entity, '_shouldMove', () => false);
+    const mockExecuteMove = mock.method(entity, '_executeMove', () => { executeMoveWasCalled = true; });
+    const mockMoveHuman = mock.method(entity, '_moveHuman', () => {});
+    try {
+      entity.move();
+      assert.equal(executeMoveWasCalled, false, '_executeMove should not be called when _shouldMove returns false');
+    } finally {
+      mockShouldMove.mock.restore();
+      mockExecuteMove.mock.restore();
+      mockMoveHuman.mock.restore();
+    }
   });
 });

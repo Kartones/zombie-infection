@@ -14,7 +14,37 @@ function makeWorld(width = 10, height = 10) {
   return world;
 }
 
-// --- World.getEntityType() ---
+describe('World.constructor', () => {
+  it('enforces minimum width and height of 2 when given 0', () => {
+    const world = new ctx.World(0, 0, 5, null);
+
+    assert.equal(world.width, 2);
+    assert.equal(world.height, 2);
+  });
+
+  it('defaults panicThreshold to 5 when given 0', () => {
+    const world = new ctx.World(10, 10, 0, null);
+
+    assert.equal(world.panicThreshold, 5);
+  });
+
+  it('initializes worldState to all ENTITY_TYPES.NONE for valid dimensions', () => {
+    const world = new ctx.World(4, 3, 5, null);
+
+    for (let y = 0; y < 3; y++) {
+      for (let x = 0; x < 4; x++) {
+        assert.equal(world.worldState[y][x], ctx.ENTITY_TYPES.NONE);
+      }
+    }
+  });
+
+  it('initializes entities to an empty array', () => {
+    const world = new ctx.World(10, 10, 5, null);
+
+    assert.ok(Array.isArray(world.entities));
+    assert.equal(world.entities.length, 0);
+  });
+});
 
 describe('World.getEntityType()', () => {
   it('returns correct entity type from worldState', () => {
@@ -37,8 +67,6 @@ describe('World.getEntityType()', () => {
     assert.equal(world.getEntityType(6, 4), ctx.ENTITY_TYPES.HUMAN);
   });
 });
-
-// --- World.humansAt() ---
 
 describe('World.humansAt()', () => {
   it('returns humans at the given position', () => {
@@ -79,7 +107,82 @@ describe('World.humansAt()', () => {
 
 });
 
-// --- World.removeZombieAt() ---
+describe('World.populate()', () => {
+  it('creates exactly numEntities entities', () => {
+    const world = new ctx.World(20, 20, 5, null);
+    world.initMap();
+
+    world.populate(5);
+
+    assert.equal(world.entities.length, 5);
+  });
+
+  it('infects entities[0] so it is a ZOMBIE', () => {
+    const world = new ctx.World(20, 20, 5, null);
+    world.initMap();
+
+    world.populate(5);
+
+    assert.equal(world.entities[0].type, ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('caps entity count at width * height - 2 when numEntities is too large', () => {
+    // 2×2 world → max 4 - 2 = 2 entities
+    const world = new ctx.World(2, 2, 5, null);
+
+    world.populate(999);
+
+    assert.equal(world.entities.length, 2);
+  });
+});
+
+describe('World.upgradeHumansToPolicemen()', () => {
+  it('does not exceed max(MIN_POLICEMEN, floor(entities.length * MAX_POLICEMEN_PERCENTAGE)) policemen', () => {
+    // 100 humans → maxPolicemen = max(2, floor(100 * 0.05)) = max(2, 5) = 5
+    const world = new ctx.World(40, 40, 5, null);
+    world.initMap();
+    world.populate(100);
+    // Reset all to HUMAN first so we control the starting state
+    world.entities.forEach(e => { e.type = ctx.ENTITY_TYPES.HUMAN; });
+
+    world.upgradeHumansToPolicemen();
+
+    const policemen = world.entities.filter(e => e.type === ctx.ENTITY_TYPES.POLICEMAN);
+    const maxExpected = Math.max(ctx.Config.MIN_POLICEMEN, Math.floor(world.entities.length * ctx.Config.MAX_POLICEMEN_PERCENTAGE));
+    assert.ok(policemen.length <= maxExpected, `Expected <= ${maxExpected} policemen, got ${policemen.length}`);
+  });
+
+  it('does not add more policemen when already at the cap', () => {
+    // Start with MIN_POLICEMEN (2) policemen already present in a small group
+    const world = new ctx.World(20, 20, 5, null);
+    world.initMap();
+    world.populate(5);
+    // Force exactly MIN_POLICEMEN policemen, rest humans
+    world.entities.forEach(e => { e.type = ctx.ENTITY_TYPES.HUMAN; });
+    for (let i = 0; i < ctx.Config.MIN_POLICEMEN; i++) {
+      world.entities[i].type = ctx.ENTITY_TYPES.POLICEMAN;
+    }
+
+    world.upgradeHumansToPolicemen();
+
+    const policemen = world.entities.filter(e => e.type === ctx.ENTITY_TYPES.POLICEMAN);
+    // With 5 entities: maxPolicemen = max(2, floor(5 * 0.05)) = max(2, 0) = 2
+    assert.equal(policemen.length, ctx.Config.MIN_POLICEMEN);
+  });
+
+  it('ensures at least MIN_POLICEMEN policemen when starting from zero', () => {
+    const world = new ctx.World(20, 20, 5, null);
+    world.initMap();
+    world.populate(5);
+    // Ensure all start as humans
+    world.entities.forEach(e => { e.type = ctx.ENTITY_TYPES.HUMAN; });
+
+    world.upgradeHumansToPolicemen();
+
+    const policemen = world.entities.filter(e => e.type === ctx.ENTITY_TYPES.POLICEMAN);
+    assert.ok(policemen.length >= ctx.Config.MIN_POLICEMEN, `Expected >= ${ctx.Config.MIN_POLICEMEN} policemen, got ${policemen.length}`);
+  });
+});
 
 describe('World.removeZombieAt()', () => {
   it('removes zombie entity from entities array', () => {
@@ -113,9 +216,17 @@ describe('World.removeZombieAt()', () => {
 
     assert.equal(world.entities.length, 1);
   });
-});
 
-// --- World.zombiesInDirection() ---
+  it('does not remove a human entity at the target position', () => {
+    const world = makeWorld();
+    const human = { x: 2, y: 3, type: ctx.ENTITY_TYPES.HUMAN };
+    world.entities.push(human);
+
+    world.removeZombieAt(2, 3);
+
+    assert.ok(world.entities.includes(human), 'human should remain in entities after removeZombieAt');
+  });
+});
 
 describe('World.zombiesInDirection()', () => {
   it('counts zombies in NORTH direction', () => {
@@ -172,8 +283,6 @@ describe('World.zombiesInDirection()', () => {
     assert.equal(count, 1);
   });
 });
-
-// --- World._look() ---
 
 describe('World._look()', () => {
   it('returns WALL when it hits a wall cell', () => {
@@ -246,9 +355,76 @@ describe('World._look()', () => {
 
     assert.equal(result, ctx.ENTITY_TYPES.POLICEMAN);
   });
+
+  it('returns HUMAN when a HUMAN cell is within range', () => {
+    const world = makeWorld();
+    // entity at (5,5) facing NORTH, HUMAN placed 3 steps ahead at (5,2)
+    world.worldState[2][5] = ctx.ENTITY_TYPES.HUMAN;
+
+    const result = world._look(5, 5, ctx.DIRECTIONS.NORTH, 5);
+
+    assert.equal(result, ctx.ENTITY_TYPES.HUMAN);
+  });
+
+  it('returns NONE when distance is 0 (no steps taken)', () => {
+    const world = makeWorld();
+    // Place a ZOMBIE one step away — it must NOT be seen with distance=0
+    world.worldState[4][5] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const result = world._look(5, 5, ctx.DIRECTIONS.NORTH, 0);
+
+    assert.equal(result, ctx.ENTITY_TYPES.NONE);
+  });
 });
 
-// --- World.getStats() ---
+describe('World.nearLook() and World.farLook()', () => {
+  it('nearLook() returns ZOMBIE when one is exactly at NEAR_LOOK_DISTANCE steps north', () => {
+    // Config.NEAR_LOOK_DISTANCE = 1, so zombie 1 step north
+    const world = makeWorld();
+    world.worldState[4][5] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const result = world.nearLook(5, 5, ctx.DIRECTIONS.NORTH);
+
+    assert.equal(result, ctx.ENTITY_TYPES.ZOMBIE);
+  });
+
+  it('nearLook() returns NONE and farLook() returns ZOMBIE when zombie is beyond NEAR_LOOK_DISTANCE but within FAR_LOOK_DISTANCE', () => {
+    // NEAR_LOOK_DISTANCE = 1, FAR_LOOK_DISTANCE = 10
+    // Zombie placed 3 steps north at y=2 — beyond nearLook range (1), within farLook range (10)
+    // Note: _look() boundary check rejects y < 1, so row 0 is unreachable
+    const world = makeWorld();
+    world.worldState[2][5] = ctx.ENTITY_TYPES.ZOMBIE;
+
+    const nearResult = world.nearLook(5, 5, ctx.DIRECTIONS.NORTH);
+    const farResult = world.farLook(5, 5, ctx.DIRECTIONS.NORTH);
+
+    assert.equal(nearResult, ctx.ENTITY_TYPES.NONE, 'nearLook should not see zombie beyond NEAR_LOOK_DISTANCE');
+    assert.equal(farResult, ctx.ENTITY_TYPES.ZOMBIE, 'farLook should see zombie within FAR_LOOK_DISTANCE');
+  });
+});
+
+describe('World.initMap()', () => {
+  it('increases world height by TOP_PADDING_ROWS (2)', () => {
+    const world = new ctx.World(20, 10, 5, null);
+    world.initMap();
+
+    // TOP_PADDING_ROWS = 2
+    assert.equal(world.height, 12);
+  });
+
+  it('fills the first TOP_PADDING_ROWS rows entirely with WALL', () => {
+    const world = new ctx.World(20, 10, 5, null);
+    world.initMap();
+
+    // TOP_PADDING_ROWS = 2 — rows 0 and 1 must all be WALL
+    for (let row = 0; row < 2; row++) {
+      for (let x = 0; x < world.width; x++) {
+        assert.equal(world.worldState[row][x], ctx.ENTITY_TYPES.WALL,
+          `worldState[${row}][${x}] should be WALL`);
+      }
+    }
+  });
+});
 
 describe('World.getStats()', () => {
   it('returns zero counts when no entities', () => {
@@ -332,8 +508,6 @@ describe('World.getStats()', () => {
   });
 });
 
-// --- World.setState() ---
-
 describe('World.setState()', () => {
   it('writes the entity type to worldState at (x, y)', () => {
     const world = makeWorld();
@@ -361,8 +535,6 @@ describe('World.setState()', () => {
     assert.equal(world.worldState[4][5], ctx.ENTITY_TYPES.NONE);
   });
 });
-
-// --- World._carveEmptySpace() ---
 
 describe('World._carveEmptySpace()', () => {
   it('stroke mode carves only the perimeter', () => {

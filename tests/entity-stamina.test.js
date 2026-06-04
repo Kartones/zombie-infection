@@ -29,8 +29,6 @@ function makeMockWorld(overrides = {}) {
   return world;
 }
 
-// === Entity.constructor - stamina initialization ===
-
 describe('Entity constructor - stamina initialization', () => {
   it('sets stamina to HUMAN_STAMINA (8) for normal human', () => {
     const world = makeMockWorld();
@@ -48,8 +46,6 @@ describe('Entity constructor - stamina initialization', () => {
     assert.equal(entity.isResting, false);
   });
 });
-
-// === Entity.reset() - stamina reset ===
 
 describe('Entity.reset() - stamina reset', () => {
   it('resets stamina to HUMAN_STAMINA (8)', () => {
@@ -72,8 +68,6 @@ describe('Entity.reset() - stamina reset', () => {
     }
   });
 });
-
-// === _executeMove() - stamina drain ===
 
 describe('Entity._executeMove() - stamina drain', () => {
   it('drains stamina for panicked human (panic ends when stamina hits 0)', () => {
@@ -162,13 +156,10 @@ describe('Entity._executeMove() - stamina drain', () => {
   });
 });
 
-// === Entity.move() - recharge block ===
-
 describe('Entity.move() - recharge block', () => {
   it('increments stamina by 1 when below max (HUMAN)', () => {
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.NONE; },
-      farLook() { return ctx.ENTITY_TYPES.NONE; },
       farLook() { return ctx.ENTITY_TYPES.NONE; },
     });
     const entity = new ctx.Entity(world);
@@ -187,7 +178,6 @@ describe('Entity.move() - recharge block', () => {
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.NONE; },
       farLook() { return ctx.ENTITY_TYPES.NONE; },
-      farLook() { return ctx.ENTITY_TYPES.NONE; },
     });
     const entity = new ctx.Entity(world);
     entity.stamina = ctx.Config.HUMAN_STAMINA - 2; // 6
@@ -205,9 +195,7 @@ describe('Entity.move() - recharge block', () => {
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.NONE; },
       farLook() { return ctx.ENTITY_TYPES.NONE; },
-      nearLook() { return ctx.ENTITY_TYPES.NONE; },
-      farLook() { return ctx.ENTITY_TYPES.NONE; },
-     });
+    });
     const entity = new ctx.Entity(world);
     entity.stamina = ctx.Config.HUMAN_STAMINA - 2; // 6
     entity.isResting = true;
@@ -228,7 +216,6 @@ describe('Entity.move() - recharge block', () => {
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.NONE; },
       farLook() { return ctx.ENTITY_TYPES.NONE; },
-      farLook() { return ctx.ENTITY_TYPES.NONE; },
       zombiesInDirection() { return 0; },
     });
     const entity = new ctx.Entity(world);
@@ -245,13 +232,10 @@ describe('Entity.move() - recharge block', () => {
   });
 });
 
-// === Full stamina recharge cycle ===
-
 describe('Entity - stamina recharge cycle', () => {
   it('simulates full panic -> drain -> rest -> recharge -> move', () => {
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.NONE; },
-      farLook() { return ctx.ENTITY_TYPES.NONE; },
       farLook() { return ctx.ENTITY_TYPES.NONE; },
     });
     const entity = new ctx.Entity(world);
@@ -280,7 +264,6 @@ describe('Entity - stamina recharge cycle', () => {
     const world = makeMockWorld({
       nearLook() { return ctx.ENTITY_TYPES.NONE; },
       farLook() { return ctx.ENTITY_TYPES.NONE; },
-      farLook() { return ctx.ENTITY_TYPES.NONE; },
     });
     const entity = new ctx.Entity(world);
     entity.stamina = 1;
@@ -303,8 +286,6 @@ describe('Entity - stamina recharge cycle', () => {
   });
 });
 
-// === World upgrade - stamina set for policeman ===
-
 describe('World - stamina during upgrade to policeman', () => {
   it('stamina becomes POLICEMAN_STAMINA when human is upgraded', () => {
     const world = new ctx.World(15, 15, 5, null);
@@ -317,10 +298,7 @@ describe('World - stamina during upgrade to policeman', () => {
 
     // Find a human entity
     const human = world.entities.find(e => e.type === ctx.ENTITY_TYPES.HUMAN);
-    if (!human) {
-      // No human found (all converted?), skip test
-      return;
-    }
+    assert.ok(human, 'no human entity found');
 
     // Before upgrade: stamina = HUMAN_STAMINA = 8
     assert.equal(human.type, ctx.ENTITY_TYPES.HUMAN);
@@ -334,8 +312,6 @@ describe('World - stamina during upgrade to policeman', () => {
   });
 });
 
-// === Stamina rendering during recharge ===
-
 describe('Entity - stamina rendering during recharge', () => {
   it('renders as PANICKING while activityLevel > 0 during recharge', () => {
     const world = makeMockWorld({});
@@ -343,8 +319,6 @@ describe('Entity - stamina rendering during recharge', () => {
     entity.stamina = ctx.Config.HUMAN_STAMINA - 2; // 6
     entity.isResting = true;
     entity.activityLevel = 3; // > 0
-    entity.x = 5;
-    entity.y = 5;
     entity.x = 5;
     entity.y = 5;
 
@@ -363,8 +337,6 @@ describe('Entity - stamina rendering during recharge', () => {
     entity.stamina = ctx.Config.HUMAN_STAMINA - 2; // 6
     entity.isResting = true;
     entity.activityLevel = 0;
-    entity.x = 5;
-    entity.y = 5;
     entity.x = 5;
     entity.y = 5;
 
