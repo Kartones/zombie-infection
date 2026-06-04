@@ -307,7 +307,9 @@ describe('Entity - stamina recharge cycle', () => {
 
 describe('World - stamina during upgrade to policeman', () => {
   it('stamina becomes POLICEMAN_STAMINA when human is upgraded', () => {
-    const world = new ctx.World(15, 15, 5, 15);
+    const world = new ctx.World(15, 15, 5, null);
+    world.initMap();
+    world.populate(15);
 
     // World creates 15 entities, all HUMAN by default
     // All have stamina = HUMAN_STAMINA (8) via constructor

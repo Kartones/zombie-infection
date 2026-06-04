@@ -1,7 +1,7 @@
 "use strict";
 
 class World {
-  constructor(mapWidth, mapHeight, panicThreshold, numEntities, soundSystem) {
+  constructor(mapWidth, mapHeight, panicThreshold, soundSystem) {
     this.soundSystem = soundSystem;
     this.panicThreshold = panicThreshold || 5;
 
@@ -9,12 +9,18 @@ class World {
     this.height = Math.max(2, mapHeight || 0);
 
     this._initializeWorldState();
+    this.entities = [];
+  }
+
+  initMap() {
     this._addWalls();
     for (let i = 0; i < TOP_PADDING_ROWS; i++) {
       this.worldState.unshift(new Array(this.width).fill(ENTITY_TYPES.WALL));
     }
     this.height += TOP_PADDING_ROWS;
+  }
 
+  populate(numEntities) {
     let amountEntities = Math.min(this.width * this.height - 2, numEntities);
 
     this.entities = new Array(amountEntities)

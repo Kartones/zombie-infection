@@ -3,7 +3,9 @@
 class Game {
   constructor(canvasNodeId, mapWidth, mapHeight, numEntities) {
     this.soundSystem = new SoundSystem();
-    this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, numEntities, this.soundSystem);
+    this.world = new World(mapWidth, mapHeight, Config.PANIC_LEVEL, this.soundSystem);
+    this.world.initMap();
+    this.world.populate(numEntities);
     this.renderer = new Renderer(canvasNodeId, this.world.width, this.world.height);
     this.renderer.render(this.world.worldState, this.world.entities);
 

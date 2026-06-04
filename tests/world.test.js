@@ -8,15 +8,9 @@ before(() => {
   ctx = createContext();
 });
 
-// Build a World-like object without touching the DOM constructor.
-// We use Object.create(World.prototype) then manually set up worldState and entities.
 function makeWorld(width = 10, height = 10) {
-  const world = Object.create(ctx.World.prototype);
-  world.width = width;
-  world.height = height;
-  world.panicThreshold = 5;
-  world.entities = [];
-  world.worldState = Array.from({ length: height }, () => new Array(width).fill(ctx.ENTITY_TYPES.NONE));
+  const soundSystem = { playBite() {}, playShot() {} };
+  const world = new ctx.World(width, height, 5, soundSystem);
   return world;
 }
 
